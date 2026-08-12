@@ -1,2 +1,2 @@
 export { RainEffect } from './rain-effect'
-export type { RainEffectProps, RainFit, WeatherKind } from './types'
+export type { RainEffectProps, WeatherKind } from './types'

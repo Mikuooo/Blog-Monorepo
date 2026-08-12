@@ -1,214 +1,347 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
+import { useEffect, useRef, useState } from 'react'
 
-import { RaindropSurface } from './raindrop-surface'
-import type { RainEffectProps, WeatherProfile } from './types'
-import {
-  createFixedWeatherState,
-  createWeatherState,
-  getWeatherProfile,
-  advanceWeather,
-} from './weather'
-import { WebGLRainRenderer } from './webgl-rain-renderer'
-import { supportsWebGL } from './webgl-support'
+import { Raindrops } from './rain-engine'
+import { RainRenderer } from './rain-renderer'
+import type { RainAssets, RainEffectProps, RaindropOptions, WeatherKind } from './types'
 
-const DEFAULT_SCENE = '/images/effects/rain/rainy-night-city.png'
+const ASSET_ROOT = '/effects/rain'
+const FOREGROUND_SIZE = { height: 64, width: 96 }
+const BACKGROUND_SIZE = { height: 256, width: 384 }
 
-function randomBetween(minimum: number, maximum: number): number {
-  return minimum + Math.random() * (maximum - minimum)
+const WEATHER_LABELS: Record<WeatherKind, string> = {
+  drizzle: '小雨',
+  'heavy-rain': '大雨',
+  thunderstorm: '雷雨',
 }
 
-function lightningIntensity(startedAt: number, now: number): number {
-  if (startedAt < 0) return 0
-  const elapsed = now - startedAt
-  const pulse = (start: number, duration: number, power: number) => {
-    const progress = (elapsed - start) / duration
-    return progress >= 0 && progress <= 1 ? Math.sin(progress * Math.PI) * power : 0
+const WEATHER_OPTIONS: Record<WeatherKind, Partial<RaindropOptions>> = {
+  drizzle: {
+    dropletsRate: 10,
+    dropletsSize: [3.5, 6],
+    maxR: 40,
+    minR: 10,
+    rainChance: 0.15,
+    rainLimit: 2,
+  },
+  'heavy-rain': {
+    dropletsRate: 50,
+    dropletsSize: [3, 5.5],
+    maxR: 50,
+    minR: 20,
+    rainChance: 0.35,
+    rainLimit: 6,
+    trailRate: 1,
+    trailScaleRange: [0.25, 0.35],
+  },
+  thunderstorm: {
+    dropletsRate: 80,
+    dropletsSize: [3, 5.5],
+    maxR: 55,
+    minR: 20,
+    rainChance: 0.4,
+    rainLimit: 6,
+    trailRate: 2.5,
+    trailScaleRange: [0.25, 0.4],
+  },
+}
+
+let rainAssetsPromise: Promise<RainAssets> | null = null
+
+function loadImage(source: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new window.Image()
+    const handleLoad = () => resolve(image)
+    image.addEventListener('load', handleLoad, { once: true })
+    image.addEventListener('error', () => reject(new Error(`Unable to load ${source}`)), {
+      once: true,
+    })
+    image.src = source
+    if (image.complete && image.naturalWidth > 0) handleLoad()
+  })
+}
+
+function loadRainAssets(): Promise<RainAssets> {
+  rainAssetsPromise ??= Promise.all([
+    loadImage(`${ASSET_ROOT}/city.jpg`),
+    loadImage(`${ASSET_ROOT}/drop-alpha.png`),
+    loadImage(`${ASSET_ROOT}/drop-color.png`),
+    loadImage(`${ASSET_ROOT}/texture-drizzle-bg.png`),
+    loadImage(`${ASSET_ROOT}/texture-drizzle-fg.png`),
+    loadImage(`${ASSET_ROOT}/texture-rain-bg.png`),
+    loadImage(`${ASSET_ROOT}/texture-rain-fg.png`),
+    loadImage(`${ASSET_ROOT}/texture-storm-lightning-bg.png`),
+    loadImage(`${ASSET_ROOT}/texture-storm-lightning-fg.png`),
+  ]).then(
+    ([city, dropAlpha, dropColor, drizzleBg, drizzleFg, rainBg, rainFg, stormBg, stormFg]) => ({
+      city,
+      drizzleBg,
+      drizzleFg,
+      dropAlpha,
+      dropColor,
+      rainBg,
+      rainFg,
+      stormBg,
+      stormFg,
+    }),
+  )
+  return rainAssetsPromise
+}
+
+function createCanvas(width: number, height: number): HTMLCanvasElement {
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+  return canvas
+}
+
+function weatherPair(assets: RainAssets, weather: WeatherKind) {
+  return weather === 'drizzle'
+    ? { background: assets.drizzleBg, foreground: assets.drizzleFg }
+    : { background: assets.rainBg, foreground: assets.rainFg }
+}
+
+function drawTexturePair(
+  foregroundContext: CanvasRenderingContext2D,
+  backgroundContext: CanvasRenderingContext2D,
+  foreground: CanvasImageSource,
+  background: CanvasImageSource,
+  clear = true,
+  alpha = 1,
+): void {
+  if (clear) {
+    foregroundContext.clearRect(0, 0, FOREGROUND_SIZE.width, FOREGROUND_SIZE.height)
+    backgroundContext.clearRect(0, 0, BACKGROUND_SIZE.width, BACKGROUND_SIZE.height)
   }
-  return Math.max(pulse(0, 100, 0.9), pulse(145, 85, 0.5), pulse(310, 150, 0.74))
+  foregroundContext.globalAlpha = alpha
+  backgroundContext.globalAlpha = alpha
+  foregroundContext.drawImage(foreground, 0, 0, FOREGROUND_SIZE.width, FOREGROUND_SIZE.height)
+  backgroundContext.drawImage(background, 0, 0, BACKGROUND_SIZE.width, BACKGROUND_SIZE.height)
+  foregroundContext.globalAlpha = 1
+  backgroundContext.globalAlpha = 1
 }
 
 export function RainEffect({
   className = '',
-  fit = 'cover',
-  intensity = 1,
-  sceneSrc = DEFAULT_SCENE,
   showWeatherLabel = false,
-  themeColor = '#39c5bb',
   weather: weatherMode = 'auto',
 }: RainEffectProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const sceneRef = useRef<HTMLImageElement>(null)
   const [renderState, setRenderState] = useState<'fallback' | 'loading' | 'ready'>('loading')
   const [weatherLabel, setWeatherLabel] = useState(
-    weatherMode === 'thunderstorm' ? '雷雨' : weatherMode === 'heavy-rain' ? '大雨' : '小雨',
+    WEATHER_LABELS[weatherMode === 'auto' ? 'heavy-rain' : weatherMode],
   )
 
   useEffect(() => {
     const root = rootRef.current
     const canvas = canvasRef.current
-    const image = sceneRef.current
-    if (!root || !canvas || !image) return
+    if (!root || !canvas) return
 
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const normalizedIntensity = Math.min(1.8, Math.max(0.25, intensity))
-    const surface = new RaindropSurface()
-    let renderer: WebGLRainRenderer | null = null
-    let resizeObserver: ResizeObserver | null = null
-    let frameId = 0
+    let assets: RainAssets | null = null
+    let currentWeather: WeatherKind = weatherMode === 'auto' ? 'heavy-rain' : weatherMode
     let disposed = false
-    let initialized = false
-    let lastFrame = performance.now()
-    let weatherState =
-      weatherMode === 'auto'
-        ? createWeatherState(lastFrame)
-        : createFixedWeatherState(weatherMode, lastFrame)
-    let lightningStartedAt = -1
-    let nextLightningAt = lastFrame + randomBetween(7_000, 18_000)
+    let resizeFrame = 0
+    let transitionFrame = 0
+    let weatherTimer = 0
+    let flashTimer = 0
+    let flashing = false
+    let raindrops: Raindrops | null = null
+    let renderer: RainRenderer | null = null
 
-    const resize = () => {
-      if (!renderer) return
+    const foregroundTexture = createCanvas(FOREGROUND_SIZE.width, FOREGROUND_SIZE.height)
+    const backgroundTexture = createCanvas(BACKGROUND_SIZE.width, BACKGROUND_SIZE.height)
+    const foregroundContext = foregroundTexture.getContext('2d')
+    const backgroundContext = backgroundTexture.getContext('2d')
+    if (!foregroundContext || !backgroundContext) {
+      const fallbackTimer = window.setTimeout(() => setRenderState('fallback'), 0)
+      return () => window.clearTimeout(fallbackTimer)
+    }
+
+    const renderWeather = (kind: WeatherKind) => {
+      if (!assets) return
+      const pair = weatherPair(assets, kind)
+      drawTexturePair(foregroundContext, backgroundContext, pair.foreground, pair.background)
+      renderer?.updateTextures()
+    }
+
+    const build = () => {
+      if (!assets || disposed) return
+      renderer?.destroy()
+      raindrops?.destroy()
+
       const bounds = root.getBoundingClientRect()
-      const width = Math.max(2, bounds.width)
-      const height = Math.max(2, bounds.height)
-      const changed = surface.resize(width, height)
-      renderer.resize(width, height)
-      if (changed) {
-        surface.prime(getWeatherProfile(weatherState, performance.now()), normalizedIntensity)
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      canvas.width = Math.max(2, Math.round(bounds.width * dpr))
+      canvas.height = Math.max(2, Math.round(bounds.height * dpr))
+      canvas.style.width = `${bounds.width}px`
+      canvas.style.height = `${bounds.height}px`
+
+      renderWeather(currentWeather)
+      raindrops = new Raindrops(
+        canvas.width,
+        canvas.height,
+        dpr,
+        assets.dropAlpha,
+        assets.dropColor,
+        WEATHER_OPTIONS[currentWeather],
+      )
+      renderer = new RainRenderer(canvas, raindrops.canvas, foregroundTexture, backgroundTexture)
+      setRenderState('ready')
+    }
+
+    const transitionWeather = (nextWeather: WeatherKind) => {
+      if (!assets || nextWeather === currentWeather) return
+      cancelAnimationFrame(transitionFrame)
+      const sourceForeground = createCanvas(FOREGROUND_SIZE.width, FOREGROUND_SIZE.height)
+      const sourceBackground = createCanvas(BACKGROUND_SIZE.width, BACKGROUND_SIZE.height)
+      sourceForeground.getContext('2d')?.drawImage(foregroundTexture, 0, 0)
+      sourceBackground.getContext('2d')?.drawImage(backgroundTexture, 0, 0)
+      const target = weatherPair(assets, nextWeather)
+      const startedAt = performance.now()
+      currentWeather = nextWeather
+      setWeatherLabel(WEATHER_LABELS[nextWeather])
+      raindrops?.setOptions(WEATHER_OPTIONS[nextWeather])
+      raindrops?.clearDrops()
+
+      const drawTransition = (now: number) => {
+        if (disposed) return
+        const progress = Math.min(1, (now - startedAt) / 1000)
+        drawTexturePair(foregroundContext, backgroundContext, sourceForeground, sourceBackground)
+        drawTexturePair(
+          foregroundContext,
+          backgroundContext,
+          target.foreground,
+          target.background,
+          false,
+          progress,
+        )
+        renderer?.updateTextures()
+        if (progress < 1) transitionFrame = requestAnimationFrame(drawTransition)
       }
+      transitionFrame = requestAnimationFrame(drawTransition)
     }
 
-    const renderFrame = (profile: WeatherProfile, lightning: number, now: number) => {
-      renderer?.render({
-        fit,
-        lightning,
-        mist: profile.mist,
-        rain: profile.streakRate,
-        surface: surface.canvas,
-        themeColor,
-        time: now / 1_000,
-        wind: profile.wind,
-      })
+    const scheduleWeather = () => {
+      if (weatherMode !== 'auto' || disposed) return
+      const duration = 18_000 + Math.random() * 24_000
+      weatherTimer = window.setTimeout(() => {
+        const alternatives: WeatherKind[] = ['drizzle', 'heavy-rain', 'thunderstorm'].filter(
+          (kind): kind is WeatherKind => kind !== currentWeather,
+        )
+        const next = alternatives[Math.floor(Math.random() * alternatives.length)] ?? 'heavy-rain'
+        transitionWeather(next)
+        scheduleWeather()
+      }, duration)
     }
 
-    const animate = (now: number) => {
-      if (disposed || !renderer) return
-      const delta = Math.min(0.034, Math.max(0.001, (now - lastFrame) / 1_000))
-      lastFrame = now
+    const flash = async () => {
+      if (!assets || flashing || currentWeather !== 'thunderstorm') return
+      flashing = true
+      const base = weatherPair(assets, currentWeather)
+      const paint = (alpha: number) => {
+        if (!assets || disposed) return
+        drawTexturePair(foregroundContext, backgroundContext, base.foreground, base.background)
+        drawTexturePair(
+          foregroundContext,
+          backgroundContext,
+          assets.stormFg,
+          assets.stormBg,
+          false,
+          alpha,
+        )
+        renderer?.updateTextures()
+      }
+      const wait = (milliseconds: number) =>
+        new Promise<void>((resolve) => window.setTimeout(resolve, milliseconds))
 
-      if (weatherMode === 'auto') {
-        const nextState = advanceWeather(weatherState, now)
-        if (nextState !== weatherState) {
-          weatherState = nextState
-          setWeatherLabel(weatherState.target.label)
-          if (weatherState.target.thunder > 0) nextLightningAt = now + randomBetween(4_500, 11_000)
+      paint(1)
+      await wait(25)
+      const pulses = 2 + Math.floor(Math.random() * 5)
+      for (let index = 0; index < pulses && !disposed; index += 1) {
+        paint(0.1 + Math.random() * 0.9)
+        await wait(25)
+      }
+      paint(1)
+      await wait(100)
+      const fadeStartedAt = performance.now()
+      await new Promise<void>((resolve) => {
+        const fade = (now: number) => {
+          const progress = Math.min(1, (now - fadeStartedAt) / 250)
+          paint(1 - progress)
+          if (progress < 1 && !disposed) requestAnimationFrame(fade)
+          else resolve()
         }
-      }
-
-      const profile = getWeatherProfile(weatherState, now)
-      if (profile.thunder > 0.35 && now >= nextLightningAt) {
-        lightningStartedAt = now
-        nextLightningAt = now + randomBetween(7_000, 18_000)
-      }
-      const lightning = lightningIntensity(lightningStartedAt, now) * profile.thunder
-      surface.update(profile, delta, normalizedIntensity)
-      renderFrame(profile, lightning, now)
-      frameId = window.requestAnimationFrame(animate)
+        requestAnimationFrame(fade)
+      })
+      flashing = false
     }
 
-    const start = () => {
-      window.cancelAnimationFrame(frameId)
-      if (!renderer) return
-      lastFrame = performance.now()
-      const profile = getWeatherProfile(weatherState, lastFrame)
-      if (reducedMotion.matches) {
-        surface.prime(profile, normalizedIntensity)
-        renderFrame(profile, 0, lastFrame)
-      } else {
-        frameId = window.requestAnimationFrame(animate)
-      }
+    const handlePointerMove = (event: PointerEvent) => {
+      renderer?.setParallax(
+        (event.clientX / Math.max(window.innerWidth, 1)) * 2 - 1,
+        (event.clientY / Math.max(window.innerHeight, 1)) * 2 - 1,
+      )
     }
 
-    const handleVisibility = () => {
-      if (document.hidden) window.cancelAnimationFrame(frameId)
-      else start()
-    }
+    const resizeObserver = new ResizeObserver(() => {
+      cancelAnimationFrame(resizeFrame)
+      resizeFrame = requestAnimationFrame(build)
+    })
+    resizeObserver.observe(root)
+    window.addEventListener('pointermove', handlePointerMove, { passive: true })
+    flashTimer = window.setInterval(() => {
+      if (currentWeather === 'thunderstorm' && Math.random() <= 0.1) void flash()
+    }, 500)
 
-    const initialize = () => {
-      if (disposed || initialized || !image.complete || image.naturalWidth === 0) return
-      initialized = true
-      if (!supportsWebGL(canvas)) {
-        setRenderState('fallback')
-        return
-      }
-
-      try {
-        renderer = new WebGLRainRenderer(canvas, image)
-        resizeObserver = new ResizeObserver(resize)
-        resizeObserver.observe(root)
-        document.addEventListener('visibilitychange', handleVisibility)
-        reducedMotion.addEventListener('change', start)
-        resize()
-        const profile = getWeatherProfile(weatherState, performance.now())
-        renderFrame(profile, 0, performance.now())
-        setWeatherLabel(profile.label)
-        setRenderState('ready')
-        start()
-      } catch {
-        renderer?.destroy()
-        renderer = null
-        setRenderState('fallback')
-      }
-    }
-
-    const handleImageError = () => setRenderState('fallback')
-    setRenderState('loading')
-    image.addEventListener('load', initialize)
-    image.addEventListener('error', handleImageError)
-    initialize()
+    void loadRainAssets()
+      .then((loadedAssets) => {
+        if (disposed) return
+        assets = loadedAssets
+        build()
+        scheduleWeather()
+      })
+      .catch(() => {
+        if (!disposed) setRenderState('fallback')
+      })
 
     return () => {
       disposed = true
-      window.cancelAnimationFrame(frameId)
-      image.removeEventListener('load', initialize)
-      image.removeEventListener('error', handleImageError)
-      resizeObserver?.disconnect()
-      document.removeEventListener('visibilitychange', handleVisibility)
-      reducedMotion.removeEventListener('change', start)
+      resizeObserver.disconnect()
+      cancelAnimationFrame(resizeFrame)
+      cancelAnimationFrame(transitionFrame)
+      window.clearTimeout(weatherTimer)
+      window.clearInterval(flashTimer)
+      window.removeEventListener('pointermove', handlePointerMove)
       renderer?.destroy()
+      raindrops?.destroy()
     }
-  }, [fit, intensity, sceneSrc, themeColor, weatherMode])
+  }, [weatherMode])
 
   return (
     <div
       aria-hidden="true"
-      className={`pointer-events-none absolute inset-0 overflow-hidden bg-slate-950 ${className}`}
+      className={`pointer-events-none absolute inset-0 overflow-hidden bg-[#1b1728] ${className}`}
       data-rain-state={renderState}
       ref={rootRef}
     >
       <Image
         alt=""
-        className={`absolute inset-0 size-full ${fit === 'cover' ? 'object-cover' : 'object-contain'}`}
+        className="absolute inset-0 size-full object-cover"
         fill
-        ref={sceneRef}
         sizes="100vw"
-        src={sceneSrc}
+        src={`${ASSET_ROOT}/city.jpg`}
       />
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(2,18,19,0.44),rgba(1,9,11,0.66))]" />
+      <div className="absolute inset-0 bg-white/20" />
       <canvas
-        className={`absolute inset-0 size-full transition-opacity duration-700 ${renderState === 'ready' ? 'opacity-100' : 'opacity-0'}`}
+        className={`absolute inset-0 size-full transition-opacity duration-300 ${renderState === 'ready' ? 'opacity-100' : 'opacity-0'}`}
         ref={canvasRef}
       />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_48%,transparent_0%,rgba(1,10,12,0.06)_42%,rgba(1,8,10,0.48)_100%)]" />
       {showWeatherLabel ? (
-        <div className="absolute bottom-5 left-5 hidden items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs font-medium text-white/75 backdrop-blur-md sm:flex">
-          <span
-            className="size-1.5 rounded-full shadow-[0_0_10px_currentColor]"
-            style={{ backgroundColor: themeColor, color: themeColor }}
-          />
+        <div className="absolute bottom-5 left-5 hidden items-center gap-2 rounded-full border border-white/30 bg-[#252445]/35 px-3 py-1.5 text-xs font-medium text-white/90 backdrop-blur-md sm:flex">
+          <span className="size-1.5 rounded-full bg-primary shadow-[0_0_10px_#39c5bb]" />
           动态天气 · {weatherLabel}
         </div>
       ) : null}
