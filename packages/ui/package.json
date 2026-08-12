@@ -10,6 +10,18 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./dist/index.js"
+    },
+    "./components/*": {
+      "types": "./src/components/*.tsx",
+      "development": "./src/components/*.tsx",
+      "production": "./dist/components/*.js",
+      "default": "./dist/components/*.js"
+    },
+    "./lib/*": {
+      "types": "./src/lib/*.ts",
+      "development": "./src/lib/*.ts",
+      "production": "./dist/lib/*.js",
+      "default": "./dist/lib/*.js"
     }
   },
   "files": [
