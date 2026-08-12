@@ -74,6 +74,20 @@ select {
   -webkit-tap-highlight-color: transparent;
 }
 
+.rain-login-card {
+  background: rgba(249, 255, 254, 0.9);
+  box-shadow:
+    0 28px 80px rgba(0, 13, 12, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(24px) saturate(118%);
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+  .rain-login-card {
+    background: rgba(249, 255, 254, 0.97);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
