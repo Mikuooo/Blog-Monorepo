@@ -10,7 +10,7 @@ onlyBuiltDependencies:
 
 catalog:
   '@eslint/js': ^9.39.5
-  '@types/node': ^20.19.0
+  '@types/node': ^24.0.0
   '@types/react': ^19.2.18
   '@types/react-dom': ^19.2.4
   '@vitest/coverage-v8': ^4.1.10

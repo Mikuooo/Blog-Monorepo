@@ -6,8 +6,8 @@ This file fixes the initial implementation baseline. The accepted technology ADR
 
 | Area | Baseline | Rationale |
 | --- | --- | --- |
-| Runtime | Node.js 24 LTS recommended; 20.19+ supported | Prisma 7 requires Node 20.19 or newer, while the current workstation can still validate on Node 20.20.2. |
-| Package manager | pnpm 10.34.5 | Last pnpm 10 line supports Node 20; pnpm 11 requires a newer runtime. |
+| Runtime | Node.js 24 LTS | The complete locked dependency graph and CI are validated on Node 24; older runtimes are not part of the support contract. |
+| Package manager | pnpm 10.34.5 | Pinned package-manager behavior and lockfile format for reproducible installs. |
 | Language | TypeScript 5.9.3 | Supported by the selected ESLint and OpenAPI generation toolchain. |
 | Monorepo | Turborepo 2.10 | Matches ADR-0001 and provides task ordering/cache boundaries. |
 | Frontend | Next.js 16.3, React 19.2, Tailwind CSS 4.3 | Current compatible App Router baseline. |

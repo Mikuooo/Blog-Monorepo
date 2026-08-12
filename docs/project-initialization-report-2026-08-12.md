@@ -16,7 +16,7 @@ ADR-0011、ADR-0012、ADR-0013 已转为 `Accepted`，分别固定：
 
 | 领域 | 基线 |
 | --- | --- |
-| Runtime | Node.js 24 LTS 推荐，项目最低兼容 Node.js 20.19 |
+| Runtime | Node.js 24 LTS；完整依赖树与 CI 只承诺该运行时 |
 | Package manager | pnpm 10.34.5 |
 | Language | TypeScript 5.9.3 |
 | Monorepo | Turborepo 2.10.9 |

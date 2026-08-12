@@ -4,7 +4,7 @@ A pnpm/Turborepo TypeScript monorepo for the public blog, CMS admin, canonical N
 
 ## Requirements
 
-- Node.js 24 LTS recommended; Node.js 20.19+ remains supported for the current toolchain.
+- Node.js 24 LTS.
 - Corepack and pnpm 10.34.5.
 - Docker Compose for the local PostgreSQL and Redis services.
 
