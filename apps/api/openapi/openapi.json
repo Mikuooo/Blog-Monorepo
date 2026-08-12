@@ -1,0 +1,62 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/health": {
+      "get": {
+        "operationId": "getHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Check API liveness",
+        "tags": [
+          "system"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Blog Platform Public API",
+    "description": "Public and administration HTTP contract.",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "HealthResponseDto": {
+        "type": "object",
+        "properties": {
+          "service": {
+            "type": "string",
+            "enum": [
+              "api"
+            ],
+            "example": "api"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ],
+            "example": "ok"
+          }
+        },
+        "required": [
+          "service",
+          "status"
+        ]
+      }
+    }
+  }
+}

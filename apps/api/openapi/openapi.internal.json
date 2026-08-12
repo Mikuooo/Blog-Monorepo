@@ -1,0 +1,74 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/v1/internal/health": {
+      "get": {
+        "operationId": "getInternalHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "internal-workload": []
+          }
+        ],
+        "summary": "Check the private API boundary",
+        "tags": [
+          "internal-system"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Blog Platform Internal API",
+    "description": "Private workload-to-API command contract.",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "internal-workload": {
+        "scheme": "bearer",
+        "bearerFormat": "workload-token",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "HealthResponseDto": {
+        "type": "object",
+        "properties": {
+          "service": {
+            "type": "string",
+            "enum": [
+              "api"
+            ],
+            "example": "api"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ],
+            "example": "ok"
+          }
+        },
+        "required": [
+          "service",
+          "status"
+        ]
+      }
+    }
+  }
+}

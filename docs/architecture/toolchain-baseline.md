@@ -1,0 +1,26 @@
+# Toolchain baseline
+
+Date: 2026-08-12
+
+This file fixes the initial implementation baseline. The accepted technology ADRs remain authoritative; the versions below are compatibility choices, not new architecture.
+
+| Area | Baseline | Rationale |
+| --- | --- | --- |
+| Runtime | Node.js 24 LTS recommended; 20.19+ supported | Prisma 7 requires Node 20.19 or newer, while the current workstation can still validate on Node 20.20.2. |
+| Package manager | pnpm 10.34.5 | Last pnpm 10 line supports Node 20; pnpm 11 requires a newer runtime. |
+| Language | TypeScript 5.9.3 | Supported by the selected ESLint and OpenAPI generation toolchain. |
+| Monorepo | Turborepo 2.10 | Matches ADR-0001 and provides task ordering/cache boundaries. |
+| Frontend | Next.js 16.3, React 19.2, Tailwind CSS 4.3 | Current compatible App Router baseline. |
+| Backend | NestJS 11.1, Prisma 7.9, PostgreSQL 17 | Matches ADR-0003 through ADR-0005. Prisma uses the PostgreSQL driver adapter. |
+| Async | BullMQ 6, Redis 7.4 | Matches ADR-0008 and keeps Redis non-canonical. |
+| Contract | Nest Swagger, OpenAPI, openapi-typescript/openapi-fetch | Generated transport contracts; no shared Prisma or Nest DTO imports. |
+| Validation | ESLint 9.39, Prettier 3, Vitest 4 | Current Next.js plugins do not yet declare ESLint 10 compatibility; strict peer validation stays enabled. |
+
+Still intentionally deferred because it needs product or deployment input rather than framework selection:
+
+- end-user authentication/session provider;
+- workload identity issuer and private routing implementation;
+- production S3-compatible provider;
+- search provider and deployment topology.
+
+None of these items blocks repository initialization or feature development behind explicit ports.

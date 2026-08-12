@@ -1,0 +1,34 @@
+{
+  "name": "@blog/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --exclude=dist/** --passWithNoTests",
+    "test:coverage": "vitest run --coverage --exclude=dist/** --passWithNoTests"
+  },
+  "dependencies": {
+    "@blog/api-client": "workspace:*",
+    "@blog/ui": "workspace:*",
+    "next": "^16.3.0",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@blog/eslint-config": "workspace:*",
+    "@blog/typescript-config": "workspace:*",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "tailwindcss": "^4.3.3",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

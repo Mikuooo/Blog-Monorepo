@@ -1,0 +1,27 @@
+{
+  "name": "@blog/eslint-config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./base": "./base.mjs",
+    "./next": "./next.mjs"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings 0"
+  },
+  "dependencies": {
+    "@eslint/js": "catalog:",
+    "eslint-config-next": "^16.3.0",
+    "eslint-config-prettier": "catalog:",
+    "globals": "catalog:",
+    "typescript-eslint": "catalog:"
+  },
+  "devDependencies": {
+    "eslint": "catalog:"
+  },
+  "peerDependencies": {
+    "eslint": "^9.0.0",
+    "typescript": ">=5.9.0 <6.1.0"
+  }
+}

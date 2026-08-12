@@ -1,0 +1,32 @@
+{
+  "name": "blog-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Blog / CMS modular monolith monorepo",
+  "packageManager": "pnpm@10.34.5",
+  "engines": {
+    "node": "^20.19.0 || ^22.12.0 || >=24.0.0",
+    "pnpm": "10.34.5"
+  },
+  "scripts": {
+    "predev": "pnpm generate && turbo run build --filter='./packages/*'",
+    "dev": "turbo run dev --parallel",
+    "build": "pnpm generate && turbo run build",
+    "lint": "turbo run lint && node tools/architecture/check-import-boundaries.mjs",
+    "typecheck": "pnpm generate && turbo run typecheck",
+    "test": "turbo run test",
+    "test:coverage": "turbo run test:coverage",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "generate": "pnpm db:generate && pnpm api:generate",
+    "db:generate": "pnpm --filter @blog/database prisma:generate",
+    "db:validate": "pnpm --filter @blog/database prisma:validate",
+    "api:generate": "pnpm --filter @blog/api openapi:generate && pnpm --filter @blog/api-types generate && pnpm --filter @blog/internal-api-client generate"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "prettier": "^3.9.6",
+    "turbo": "^2.10.9",
+    "typescript": "5.9.3"
+  }
+}

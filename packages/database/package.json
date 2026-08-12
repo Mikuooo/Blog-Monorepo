@@ -1,0 +1,46 @@
+{
+  "name": "@blog/database",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "prisma"
+  ],
+  "scripts": {
+    "prisma:generate": "prisma generate --config prisma.config.ts",
+    "prisma:validate": "prisma validate --config prisma.config.ts",
+    "prisma:format": "prisma format --config prisma.config.ts",
+    "build": "pnpm prisma:generate && tsc -p tsconfig.json",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "pnpm prisma:generate && tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --exclude=dist/**",
+    "test:coverage": "vitest run --coverage --exclude=dist/**"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.9.1",
+    "@prisma/client": "^7.9.1",
+    "dotenv": "^17.4.2",
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "@blog/eslint-config": "workspace:*",
+    "@blog/typescript-config": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/pg": "^8.21.0",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "prisma": "^7.9.1",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

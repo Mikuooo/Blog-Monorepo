@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum CommandReceiptStatus {
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum OutboxDeliveryStatus {
+  PENDING
+  LEASED
+  ENQUEUED
+  ACKED
+  DEAD
+}
+
+enum ConsumerInboxStatus {
+  PROCESSING
+  RETRYABLE
+  COMPLETED
+  DEAD
+}
+
+model CommandReceipt {
+  id             String               @id @default(uuid()) @db.Uuid
+  commandType    String               @db.VarChar(120)
+  idempotencyKey String               @db.VarChar(200)
+  requestHash    String               @db.Char(64)
+  status         CommandReceiptStatus @default(PROCESSING)
+  result         Json?                @db.JsonB
+  createdAt      DateTime             @default(now()) @db.Timestamptz(3)
+  completedAt    DateTime?            @db.Timestamptz(3)
+
+  @@unique([commandType, idempotencyKey], map: "command_receipt_type_key_uq")
+  @@index([status, createdAt], map: "command_receipt_status_created_idx")
+  @@map("command_receipt")
+}
+
+model OutboxEvent {
+  id                String           @id @default(uuid()) @db.Uuid
+  eventName         String           @db.VarChar(120)
+  eventVersion      Int              @db.SmallInt
+  aggregateType     String           @db.VarChar(64)
+  aggregateId       String           @db.VarChar(128)
+  aggregateSequence BigInt
+  occurredAt        DateTime         @db.Timestamptz(3)
+  payload           Json             @db.JsonB
+  payloadHash       String           @db.Char(64)
+  correlationId     String?          @db.VarChar(128)
+  causationId       String?          @db.VarChar(128)
+  actorId           String?          @db.VarChar(128)
+  traceparent       String?          @db.VarChar(256)
+  createdAt         DateTime         @default(now()) @db.Timestamptz(3)
+  deliveries        OutboxDelivery[]
+
+  @@unique([aggregateType, aggregateId, aggregateSequence, eventName], map: "outbox_event_dedupe_uq")
+  @@index([aggregateType, aggregateId, aggregateSequence], map: "outbox_event_aggregate_idx")
+  @@index([correlationId, createdAt], map: "outbox_event_correlation_idx")
+  @@index([createdAt], map: "outbox_event_created_idx")
+  @@map("outbox_event")
+}
+
+model OutboxDelivery {
+  id                 String               @id @default(uuid()) @db.Uuid
+  eventId            String               @db.Uuid
+  consumerKey        String               @db.VarChar(120)
+  queueName          String               @db.VarChar(120)
+  jobName            String               @db.VarChar(120)
+  status             OutboxDeliveryStatus @default(PENDING)
+  dispatchAttempts   Int                  @default(0)
+  nextAttemptAt      DateTime             @default(now()) @db.Timestamptz(3)
+  leaseOwner         String?              @db.VarChar(128)
+  leaseExpiresAt     DateTime?            @db.Timestamptz(3)
+  bullmqJobId        String?              @db.VarChar(200)
+  enqueuedAt         DateTime?            @db.Timestamptz(3)
+  acknowledgedAt     DateTime?            @db.Timestamptz(3)
+  deadLetteredAt     DateTime?            @db.Timestamptz(3)
+  lastErrorKind      String?              @db.VarChar(64)
+  lastErrorCode      String?              @db.VarChar(64)
+  lastErrorSummary   String?              @db.VarChar(500)
+  lastErrorAt        DateTime?            @db.Timestamptz(3)
+  replayCount        Int                  @default(0)
+  createdAt          DateTime             @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime             @updatedAt @db.Timestamptz(3)
+  event              OutboxEvent          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, consumerKey], map: "outbox_delivery_event_consumer_uq")
+  @@index([status, nextAttemptAt, createdAt, id], map: "outbox_delivery_claim_idx")
+  @@index([status, leaseExpiresAt], map: "outbox_delivery_lease_idx")
+  @@index([status, enqueuedAt], map: "outbox_delivery_unacked_idx")
+  @@index([status, deadLetteredAt], map: "outbox_delivery_dead_idx")
+  @@map("outbox_delivery")
+}
+
+model ConsumerInbox {
+  consumerKey      String              @db.VarChar(120)
+  eventId          String              @db.Uuid
+  deliveryId       String              @db.Uuid
+  payloadHash      String              @db.Char(64)
+  status           ConsumerInboxStatus @default(PROCESSING)
+  attemptCount     Int                 @default(0)
+  leaseOwner       String?             @db.VarChar(128)
+  leaseExpiresAt   DateTime?           @db.Timestamptz(3)
+  aggregateType    String?             @db.VarChar(64)
+  aggregateId      String?             @db.VarChar(128)
+  aggregateSequence BigInt?
+  firstReceivedAt  DateTime            @default(now()) @db.Timestamptz(3)
+  lastReceivedAt   DateTime            @default(now()) @db.Timestamptz(3)
+  completedAt      DateTime?           @db.Timestamptz(3)
+  lastErrorKind    String?             @db.VarChar(64)
+  lastErrorCode    String?             @db.VarChar(64)
+  lastErrorSummary String?             @db.VarChar(500)
+  lastErrorAt      DateTime?           @db.Timestamptz(3)
+
+  @@id([consumerKey, eventId])
+  @@unique([consumerKey, deliveryId], map: "consumer_inbox_delivery_uq")
+  @@index([status, leaseExpiresAt], map: "consumer_inbox_lease_idx")
+  @@index([aggregateType, aggregateId, aggregateSequence], map: "consumer_inbox_aggregate_idx")
+  @@map("consumer_inbox")
+}

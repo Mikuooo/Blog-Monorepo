@@ -1,0 +1,39 @@
+{
+  "name": "@blog/admin",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3002",
+    "build": "next build",
+    "start": "next start --port 3002",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --exclude=dist/** --passWithNoTests",
+    "test:coverage": "vitest run --coverage --exclude=dist/** --passWithNoTests"
+  },
+  "dependencies": {
+    "@blog/api-client": "workspace:*",
+    "@blog/schemas": "workspace:*",
+    "@blog/ui": "workspace:*",
+    "@hookform/resolvers": "^5.7.1",
+    "@tanstack/react-query": "^5.101.4",
+    "next": "^16.3.0",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "react-hook-form": "^7.85.0",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@blog/eslint-config": "workspace:*",
+    "@blog/typescript-config": "workspace:*",
+    "@tailwindcss/postcss": "^4.3.3",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "tailwindcss": "^4.3.3",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
