@@ -4,15 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@blog
 import { Input } from '@blog/ui/components/input'
 import type { Metadata } from 'next'
 
+import { RainEffect } from '@/components/effects/rain'
 import { Icon } from '@/components/icons'
-import { RainGlassCanvas } from '@/features/auth/components/rain-glass-canvas'
 
 export const metadata: Metadata = { title: '登录' }
 
 export default function LoginPage() {
   return (
     <main className="relative grid min-h-screen overflow-hidden bg-slate-950 lg:grid-cols-[1.1fr_0.9fr]">
-      <RainGlassCanvas />
+      <RainEffect showWeatherLabel />
       <section className="relative z-10 hidden min-h-screen flex-col justify-between overflow-hidden p-12 text-white lg:flex xl:p-16">
         <div className="relative flex items-center gap-3">
           <div className="grid size-10 place-items-center rounded-xl bg-primary font-black text-primary-foreground">

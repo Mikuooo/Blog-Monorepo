@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest'
 
 import {
   advanceWeather,
+  createFixedWeatherState,
   createWeatherState,
   getWeatherProfile,
   WEATHER_PROFILES,
-} from './rain-simulation'
+} from './weather'
 
 describe('rain weather simulation', () => {
   it('creates a state with a randomized hold duration', () => {
@@ -37,5 +38,12 @@ describe('rain weather simulation', () => {
 
     expect(midpoint.dropRate).toBeGreaterThan(WEATHER_PROFILES.drizzle.dropRate)
     expect(midpoint.dropRate).toBeLessThan(WEATHER_PROFILES['heavy-rain'].dropRate)
+  })
+
+  it('keeps explicitly selected weather fixed', () => {
+    const state = createFixedWeatherState('thunderstorm', 2_000)
+
+    expect(advanceWeather(state, 99_000)).toBe(state)
+    expect(getWeatherProfile(state, 99_000)).toEqual(WEATHER_PROFILES.thunderstorm)
   })
 })

@@ -1,23 +1,4 @@
-export type WeatherKind = 'drizzle' | 'heavy-rain' | 'thunderstorm'
-
-export type WeatherProfile = {
-  dropRate: number
-  label: string
-  mist: number
-  speed: number
-  streakRate: number
-  thunder: number
-  wind: number
-}
-
-export type WeatherState = {
-  from: WeatherProfile
-  kind: WeatherKind
-  nextChangeAt: number
-  target: WeatherProfile
-  transitionEndAt: number
-  transitionStartAt: number
-}
+import type { WeatherKind, WeatherProfile, WeatherState } from './types'
 
 export const WEATHER_PROFILES: Record<WeatherKind, WeatherProfile> = {
   drizzle: {
@@ -57,8 +38,8 @@ const durationRanges: Record<WeatherKind, readonly [number, number]> = {
 
 const kinds: WeatherKind[] = ['drizzle', 'heavy-rain', 'thunderstorm']
 
-function randomBetween(random: () => number, min: number, max: number): number {
-  return min + random() * (max - min)
+function randomBetween(random: () => number, minimum: number, maximum: number): number {
+  return minimum + random() * (maximum - minimum)
 }
 
 export function createWeatherState(now: number, random: () => number = Math.random): WeatherState {
@@ -70,6 +51,18 @@ export function createWeatherState(now: number, random: () => number = Math.rand
     from: profile,
     kind,
     nextChangeAt: now + randomBetween(random, minimum, maximum),
+    target: profile,
+    transitionEndAt: now,
+    transitionStartAt: now,
+  }
+}
+
+export function createFixedWeatherState(kind: WeatherKind, now: number): WeatherState {
+  const profile = WEATHER_PROFILES[kind]
+  return {
+    from: profile,
+    kind,
+    nextChangeAt: Number.POSITIVE_INFINITY,
     target: profile,
     transitionEndAt: now,
     transitionStartAt: now,
