@@ -55,6 +55,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/articles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List administration articles */
+        get: operations["listAdminArticles"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/articles/{articleId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get an administration article */
+        get: operations["getAdminArticle"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -104,6 +138,120 @@ export interface components {
             message: string;
             /** @example 401 */
             statusCode: number;
+        };
+        AdminArticleListQueryDto: {
+            /** Format: uuid */
+            categoryId?: string;
+            keyword?: string;
+            /** @default 1 */
+            page: number;
+            /** @default 20 */
+            pageSize: number;
+            /** @enum {string} */
+            status?: "ARCHIVED" | "DRAFT" | "PUBLISHED" | "SCHEDULED";
+        };
+        ArticleAuthorSummaryDto: {
+            displayName: string;
+            /** Format: uuid */
+            id: string;
+            username: string;
+        };
+        ArticleCategorySummaryDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+        };
+        AdminArticleListItemDto: {
+            author: components["schemas"]["ArticleAuthorSummaryDto"];
+            category: components["schemas"]["ArticleCategorySummaryDto"] | null;
+            commentCount: number;
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            publishedAt: string | null;
+            /** Format: date-time */
+            scheduledAt: string | null;
+            slug: string;
+            /** @enum {string} */
+            status: "ARCHIVED" | "DRAFT" | "PUBLISHED" | "SCHEDULED";
+            summary: string | null;
+            title: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** @example 12840 */
+            viewCount: string;
+            /** @enum {string} */
+            visibility: "PASSWORD" | "PRIVATE" | "PUBLIC";
+        };
+        AdminArticleListResponseDto: {
+            items: components["schemas"]["AdminArticleListItemDto"][];
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+        };
+        AdminArticleErrorResponseDto: {
+            /** @example ARTICLE_NOT_FOUND */
+            code: string;
+            /** @example The requested article was not found. */
+            message: string;
+            /** @example 404 */
+            statusCode: number;
+        };
+        ArticleCoverDto: {
+            height: number | null;
+            /** Format: uuid */
+            id: string;
+            mimeType: string;
+            url: string;
+            width: number | null;
+        };
+        ArticleTagSummaryDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+        };
+        AdminArticleDetailDto: {
+            author: components["schemas"]["ArticleAuthorSummaryDto"];
+            category: components["schemas"]["ArticleCategorySummaryDto"] | null;
+            commentCount: number;
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            publishedAt: string | null;
+            /** Format: date-time */
+            scheduledAt: string | null;
+            slug: string;
+            /** @enum {string} */
+            status: "ARCHIVED" | "DRAFT" | "PUBLISHED" | "SCHEDULED";
+            summary: string | null;
+            title: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** @example 12840 */
+            viewCount: string;
+            /** @enum {string} */
+            visibility: "PASSWORD" | "PRIVATE" | "PUBLIC";
+            allowComment: boolean;
+            canonicalUrl: string | null;
+            content: string;
+            contentHtml: string | null;
+            cover: components["schemas"]["ArticleCoverDto"] | null;
+            /** Format: date-time */
+            createdAt: string;
+            isFeatured: boolean;
+            isPinned: boolean;
+            likeCount: number;
+            passwordProtected: boolean;
+            readingTime: number;
+            scheduleVersion: number;
+            seoDescription: string | null;
+            seoTitle: string | null;
+            tags: components["schemas"]["ArticleTagSummaryDto"][];
+            version: number;
+            wordCount: number;
         };
         HealthResponseDto: {
             /**
@@ -225,6 +373,100 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuthErrorResponseDto"];
+                };
+            };
+        };
+    };
+    listAdminArticles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleListResponseDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+        };
+    };
+    getAdminArticle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleDetailDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
                 };
             };
         };

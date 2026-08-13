@@ -144,6 +144,130 @@
         ]
       }
     },
+    "/api/v1/admin/articles": {
+      "get": {
+        "operationId": "listAdminArticles",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminArticleListResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminArticleErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminArticleErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminArticleErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "List administration articles",
+        "tags": [
+          "admin-articles"
+        ]
+      }
+    },
+    "/api/v1/admin/articles/{articleId}": {
+      "get": {
+        "operationId": "getAdminArticle",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminArticleDetailDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminArticleErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminArticleErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminArticleErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminArticleErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Get an administration article",
+        "tags": [
+          "admin-articles"
+        ]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "getHealth",
@@ -280,6 +404,433 @@
           "code",
           "message",
           "statusCode"
+        ]
+      },
+      "AdminArticleListQueryDto": {
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "keyword": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "page": {
+            "type": "number",
+            "default": 1,
+            "minimum": 1
+          },
+          "pageSize": {
+            "type": "number",
+            "default": 20,
+            "maximum": 100,
+            "minimum": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ARCHIVED",
+              "DRAFT",
+              "PUBLISHED",
+              "SCHEDULED"
+            ]
+          }
+        }
+      },
+      "ArticleAuthorSummaryDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "displayName",
+          "id",
+          "username"
+        ]
+      },
+      "ArticleCategorySummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ]
+      },
+      "AdminArticleListItemDto": {
+        "type": "object",
+        "properties": {
+          "author": {
+            "$ref": "#/components/schemas/ArticleAuthorSummaryDto"
+          },
+          "category": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ArticleCategorySummaryDto"
+              }
+            ]
+          },
+          "commentCount": {
+            "type": "number"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "slug": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ARCHIVED",
+              "DRAFT",
+              "PUBLISHED",
+              "SCHEDULED"
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "viewCount": {
+            "type": "string",
+            "example": "12840",
+            "pattern": "^\\d+$"
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "PASSWORD",
+              "PRIVATE",
+              "PUBLIC"
+            ]
+          }
+        },
+        "required": [
+          "author",
+          "category",
+          "commentCount",
+          "id",
+          "publishedAt",
+          "scheduledAt",
+          "slug",
+          "status",
+          "summary",
+          "title",
+          "updatedAt",
+          "viewCount",
+          "visibility"
+        ]
+      },
+      "AdminArticleListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminArticleListItemDto"
+            }
+          },
+          "page": {
+            "type": "number"
+          },
+          "pageSize": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "totalPages": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total",
+          "totalPages"
+        ]
+      },
+      "AdminArticleErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "ARTICLE_NOT_FOUND"
+          },
+          "message": {
+            "type": "string",
+            "example": "The requested article was not found."
+          },
+          "statusCode": {
+            "type": "number",
+            "example": 404
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "statusCode"
+        ]
+      },
+      "ArticleCoverDto": {
+        "type": "object",
+        "properties": {
+          "height": {
+            "type": "number",
+            "nullable": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "width": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "height",
+          "id",
+          "mimeType",
+          "url",
+          "width"
+        ]
+      },
+      "ArticleTagSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug"
+        ]
+      },
+      "AdminArticleDetailDto": {
+        "type": "object",
+        "properties": {
+          "author": {
+            "$ref": "#/components/schemas/ArticleAuthorSummaryDto"
+          },
+          "category": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ArticleCategorySummaryDto"
+              }
+            ]
+          },
+          "commentCount": {
+            "type": "number"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "scheduledAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "slug": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ARCHIVED",
+              "DRAFT",
+              "PUBLISHED",
+              "SCHEDULED"
+            ]
+          },
+          "summary": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "viewCount": {
+            "type": "string",
+            "example": "12840",
+            "pattern": "^\\d+$"
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "PASSWORD",
+              "PRIVATE",
+              "PUBLIC"
+            ]
+          },
+          "allowComment": {
+            "type": "boolean"
+          },
+          "canonicalUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "content": {
+            "type": "string"
+          },
+          "contentHtml": {
+            "type": "string",
+            "nullable": true
+          },
+          "cover": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ArticleCoverDto"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isFeatured": {
+            "type": "boolean"
+          },
+          "isPinned": {
+            "type": "boolean"
+          },
+          "likeCount": {
+            "type": "number"
+          },
+          "passwordProtected": {
+            "type": "boolean"
+          },
+          "readingTime": {
+            "type": "number"
+          },
+          "scheduleVersion": {
+            "type": "number"
+          },
+          "seoDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "seoTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ArticleTagSummaryDto"
+            }
+          },
+          "version": {
+            "type": "number"
+          },
+          "wordCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "author",
+          "category",
+          "commentCount",
+          "id",
+          "publishedAt",
+          "scheduledAt",
+          "slug",
+          "status",
+          "summary",
+          "title",
+          "updatedAt",
+          "viewCount",
+          "visibility",
+          "allowComment",
+          "canonicalUrl",
+          "content",
+          "contentHtml",
+          "cover",
+          "createdAt",
+          "isFeatured",
+          "isPinned",
+          "likeCount",
+          "passwordProtected",
+          "readingTime",
+          "scheduleVersion",
+          "seoDescription",
+          "seoTitle",
+          "tags",
+          "version",
+          "wordCount"
         ]
       },
       "HealthResponseDto": {
