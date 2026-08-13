@@ -9,6 +9,8 @@
   "exports": {
     ".": {
       "types": "./src/index.ts",
+      "development": "./src/index.ts",
+      "production": "./dist/index.js",
       "default": "./dist/index.js"
     }
   },
@@ -20,6 +22,10 @@
     "prisma:generate": "prisma generate --config prisma.config.ts",
     "prisma:validate": "prisma validate --config prisma.config.ts",
     "prisma:format": "prisma format --config prisma.config.ts",
+    "prisma:migrate:dev": "prisma migrate dev --config prisma.config.ts",
+    "prisma:migrate:deploy": "prisma migrate deploy --config prisma.config.ts",
+    "prisma:migrate:test": "prisma migrate deploy --config prisma.test.config.ts",
+    "prisma:seed": "prisma db seed --config prisma.config.ts",
     "build": "pnpm prisma:generate && tsc -p tsconfig.json",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "pnpm prisma:generate && tsc -p tsconfig.json --noEmit",
@@ -27,6 +33,7 @@
     "test:coverage": "vitest run --coverage --exclude=dist/**"
   },
   "dependencies": {
+    "@blog/shared": "workspace:*",
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
     "dotenv": "^17.4.2",
@@ -40,6 +47,7 @@
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "prisma": "^7.9.1",
+    "tsx": "^4.23.12",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

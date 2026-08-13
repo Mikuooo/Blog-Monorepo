@@ -1,3 +1,5 @@
+import './environment.js'
+
 import { createServer } from 'node:http'
 
 import { Worker } from 'bullmq'
@@ -5,17 +7,29 @@ import type { Job } from 'bullmq'
 import pino from 'pino'
 
 import { JOB_NAMES, QUEUE_NAMES } from '@blog/constants'
+import { createInternalApiClient } from '@blog/internal-api-client'
 
 import { loadWorkerConfiguration } from './config.js'
+import { createWorkloadTokenProvider } from './internal-api/workload-token.js'
 import { validateHeartbeatJob, type HeartbeatJobV1 } from './jobs/heartbeat.job.js'
+import { processScheduledArticlePublication } from './jobs/scheduled-article-publication.job.js'
 import { createRedisConnectionOptions } from './redis-connection.js'
 
 const configuration = loadWorkerConfiguration()
 const logger = pino({ level: process.env.LOG_LEVEL ?? 'info' })
-let redisReady = false
+const readyWorkers = new Set<string>()
 let shuttingDown = false
+const internalApiClient = createInternalApiClient({
+  baseUrl: configuration.internalApiBaseUrl,
+  getAccessToken: createWorkloadTokenProvider({
+    audience: configuration.internalApiAudience,
+    issuer: configuration.internalApiIssuer,
+    secret: configuration.internalApiSecret,
+    subject: configuration.internalApiSubject,
+  }),
+})
 
-const worker = new Worker<HeartbeatJobV1, void>(
+const maintenanceWorker = new Worker<HeartbeatJobV1, void>(
   QUEUE_NAMES.maintenance,
   async (job: Job<HeartbeatJobV1>) => {
     if (job.name !== JOB_NAMES.heartbeat) {
@@ -30,23 +44,40 @@ const worker = new Worker<HeartbeatJobV1, void>(
   },
 )
 
-worker.on('completed', (job) => {
-  logger.info({ jobId: job.id, queue: job.queueName }, 'Job completed')
-})
-worker.on('failed', (job, error) => {
-  logger.error(
-    { attempt: job?.attemptsMade, error, jobId: job?.id, queue: job?.queueName },
-    'Job failed',
-  )
-})
-worker.on('error', (error) => {
-  redisReady = false
-  logger.error({ error }, 'Worker connection error')
-})
-worker.on('ready', () => {
-  redisReady = true
-  logger.info({ queue: QUEUE_NAMES.maintenance }, 'Worker is ready')
-})
+const articleCommandWorker = new Worker(
+  QUEUE_NAMES.articleCommands,
+  async (job, token) => {
+    if (job.name !== JOB_NAMES.publishScheduledArticle) {
+      throw new Error(`Unsupported article command job: ${job.name}`)
+    }
+    return processScheduledArticlePublication(job, token, internalApiClient)
+  },
+  {
+    concurrency: configuration.concurrency,
+    connection: createRedisConnectionOptions(configuration.redisUrl),
+  },
+)
+
+const workers = [maintenanceWorker, articleCommandWorker]
+for (const worker of workers) {
+  worker.on('completed', (job) => {
+    logger.info({ jobId: job.id, queue: job.queueName }, 'Job completed')
+  })
+  worker.on('failed', (job, error) => {
+    logger.error(
+      { attempt: job?.attemptsMade, error, jobId: job?.id, queue: job?.queueName },
+      'Job failed',
+    )
+  })
+  worker.on('error', (error) => {
+    readyWorkers.delete(worker.name)
+    logger.error({ error }, 'Worker connection error')
+  })
+  worker.on('ready', () => {
+    readyWorkers.add(worker.name)
+    logger.info({ queue: worker.name }, 'Worker is ready')
+  })
+}
 
 const healthServer = createServer((request, response) => {
   if (request.url === '/live') {
@@ -55,6 +86,7 @@ const healthServer = createServer((request, response) => {
     return
   }
   if (request.url === '/ready') {
+    const redisReady = readyWorkers.size === workers.length
     response.writeHead(redisReady && !shuttingDown ? 200 : 503, {
       'content-type': 'application/json',
     })
@@ -73,9 +105,9 @@ healthServer.listen(configuration.healthPort, '0.0.0.0', () => {
 async function shutdown(signal: NodeJS.Signals): Promise<void> {
   if (shuttingDown) return
   shuttingDown = true
-  redisReady = false
+  readyWorkers.clear()
   logger.info({ signal }, 'Worker shutdown started')
-  await worker.close()
+  await Promise.all(workers.map((worker) => worker.close()))
   await new Promise<void>((resolve, reject) => {
     healthServer.close((error) => (error ? reject(error) : resolve()))
   })

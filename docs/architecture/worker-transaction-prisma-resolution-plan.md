@@ -4,11 +4,11 @@
 
 | 项目 | 内容 |
 | --- | --- |
-| 状态 | Proposed，方案已收敛，等待架构确认后实施 |
-| 任务级别 | L3 架构设计交付 |
-| 模式 | Design-only；不写业务代码、不创建迁移、不执行数据库变更 |
+| 状态 | Accepted；阶段 0～3 已实施，阶段 4～6 待执行 |
+| 任务级别 | L3 分阶段工程交付 |
+| 模式 | 阶段 3 已完成内部命令 API、生成客户端、Worker publisher 与真实 PostgreSQL 验证 |
 | 项目路径 | `/mnt/d/ideaproj/blog` |
-| 分支/提交 | 不适用；当前目录不是 Git 仓库 |
+| 分支/提交 | Git 已初始化；按用户授权边界保留未提交状态，未执行 commit/push |
 | 最后更新 | 2026-08-12（Asia/Shanghai） |
 | 相关提案 | ADR-0011、ADR-0012、ADR-0013 |
 
@@ -41,7 +41,7 @@
 
 ## 3. 当前事实与缺口证据
 
-当前目录只有架构/规则 Markdown，没有源码、Prisma schema、迁移、OpenAPI 或测试。因此以下内容是目标设计，不是现有实现说明。
+项目现已包含可执行源码、Prisma schema/迁移、OpenAPI 和测试。以下表格保留最初缺口证据；阶段 0～2 的解决状态见第 14 节。
 
 | 当前规则 | 缺口 |
 | --- | --- |
@@ -473,10 +473,10 @@ correlationId duration outcome errorClass
 
 | 阶段 | 目标 | 主要产物 | 验收标准 | 当前状态 |
 | --- | --- | --- | --- | --- |
-| 0 | 架构确认 | 接受 ADR-0011/0012/0013；同步核心文档 | 规则无冲突、所有权唯一 | Proposed |
-| 1 | 工程/数据库基础 | Git/workspace；`packages/database`；Prisma schema/migration；lint 边界 | 新检出可构建；非法 import 在 CI 失败 | 未开始 |
-| 2 | 权威发布事务 | Articles ownership；UoW；Receipt；Audit；Outbox/Delivery | 原子性、并发、幂等集成测试通过 | 未开始 |
-| 3 | 内部命令 API | Internal Guard/OpenAPI/client；Worker publisher | 鉴权、响应丢失、STALE/NOT_DUE E2E 通过 | 未开始 |
+| 0 | 架构确认 | 接受 ADR-0011/0012/0013；同步核心文档 | 规则无冲突、所有权唯一 | 已完成 |
+| 1 | 工程/数据库基础 | Git/workspace；`packages/database`；Prisma schema/migration；lint 边界 | 新检出可构建；非法 import 在 CI 失败 | 已完成 |
+| 2 | 权威发布事务 | Articles ownership；UoW；Receipt；Audit；Outbox/Delivery | 原子性、并发、幂等集成测试通过 | 已完成 |
+| 3 | 内部命令 API | Internal Guard/OpenAPI/client；Worker publisher | 鉴权、响应丢失、STALE/NOT_DUE E2E 通过 | 已完成 |
 | 4 | Outbox runtime | Dispatcher、Inbox、reconciler、DEAD/replay | Redis/进程故障测试恢复且无重复业务效果 | 未开始 |
 | 5 | 首批消费者 | Search/revalidation/RSS 等 current-state handler | 重复/乱序/stale 测试通过 | 未开始 |
 | 6 | 运维闭环 | dashboard、alerts、retention、runbook、replay audit | backlog/DEAD 可发现、可恢复、可审计 | 未开始 |
@@ -533,9 +533,9 @@ correlationId duration outcome errorClass
 - unsupported event 进入 DEAD；
 - replay 有权限、原因、审计和新 replay generation。
 
-### 15.5 本次文档验证边界
+### 15.5 阶段 3 验证边界
 
-本次只做文档一致性、链接、结构和秘密检查。依据当前代码无法执行 build、API、DB、Worker、故障注入或安全运行测试。
+阶段 3 已在隔离的 `blog_test` PostgreSQL 18 数据库验证发布事务、内部 HTTP 鉴权、稳定错误、响应丢失重试、幂等冲突、STALE 与 NOT_DUE；Worker publisher 单元测试覆盖 payload 校验、终态、精确延后、不可恢复和瞬态错误分类。Outbox dispatcher/consumer、Redis 故障注入、DEAD/replay 与业务消费者仍属于阶段 4～6，尚未宣称完成。
 
 ## 16. 上线、回滚与清理原则
 
@@ -556,7 +556,7 @@ correlationId duration outcome errorClass
 - 禁止通过清空 Redis 或删 Outbox 解决积压；
 - schema destructive cleanup 必须在稳定期后另行迁移。
 
-当前尚无实现，因此上述是未来实施的回滚设计，不是已验证的回滚能力。
+阶段 2 可通过停止调用发布 command 回滚流量；已提交的合法发布和 ledger 不回退。新增 `schedule_version` 为兼容性非破坏字段，物理删除列需在后续稳定期单独迁移。
 
 ## 17. 残余风险与待确认项
 
@@ -564,7 +564,7 @@ correlationId duration outcome errorClass
 2. 外部邮件等供应商若不支持 idempotency key，仍存在调用成功后崩溃导致重复的窗口。
 3. Outbox/Inbox 的具体重试次数、lease、保留期和告警阈值需依据实际流量确定，不能把初始默认值当永久真理。
 4. 是否需要严格 per-aggregate delta ordering，应由具体 consumer 证明；默认采用最新状态收敛。
-5. 方案在 ADR 被接受并完成真实 PostgreSQL/Redis 故障测试前，不应宣称运行时缺口已实现解决。
+5. 阶段 2 的 PostgreSQL 事务缺口已闭合；Redis/BullMQ 故障恢复仍需阶段 4 完成后才能宣称闭合。
 
 ## 18. 批准门槛
 
@@ -586,14 +586,20 @@ correlationId duration outcome errorClass
 | Security | PASS（设计） | workload identity、最小 scope、秘密/日志、401/403 语义已定义。 |
 | Data | PASS（设计） | 原子事务、模型、约束、幂等、保留和回滚原则已定义。 |
 | Report | PASS | 本方案及三份 Proposed ADR 已生成。 |
-| Build/API/DB/Worker runtime | N/A | 设计-only；当前仓库没有可执行源码/配置。 |
+| Build/API/DB | PASS（阶段 2） | 全量 lint/typecheck/test/build 通过；`blog_test` 六个真实 PostgreSQL 事务场景通过。 |
+| Worker runtime | PASS（阶段 3） | internal command endpoint、生成 client 与 Worker publisher 已实现；12 个 Worker 测试及 11 个真实 PostgreSQL API/事务场景通过。Outbox dispatcher 属于阶段 4。 |
 
 ### 19.1 Defect Loop Ledger
 
 | 迭代 | 发现 | 根因 | 修复 | 重新验证 |
 | --- | --- | --- | --- | --- |
 | 1 | ADR README 出现 CRLF/LF 混合行尾 | 在原 CRLF 文件中插入了 LF 新行 | 将本次五份文档统一为项目现有 CRLF 行尾 | PASS：`file` 确认均为 CRLF；内容、链接、围栏和 ADR 状态复检通过 |
+| 2 | 首次事务测试误用开发库并清理了空测试夹具 | 测试沿用 `DATABASE_URL`，未强制隔离数据库 | 新增 `blog_test`、`TEST_DATABASE_URL`、`_test` 名称硬保护和串行测试；开发库重跑幂等 seed | PASS：`blog_test` 六用例通过且测试后业务/ledger 表为空；开发库系统身份、角色和权限复核通过 |
+| 3 | 并发发布返回 PostgreSQL `40001` | Serializable 事务正确阻止双写，但 adapter 未分类重试 | persistence UoW 增加最多 3 次 serialization retry，并将耗尽结果翻译为稳定错误 | PASS：并发测试得到一个 PUBLISHED、一个 STALE，仅一份 revision/audit/outbox |
+| 4 | 生成内部 client 后 Worker 测试读取旧的 workspace `dist` | 直接执行 filtered test 不经过 Turbo 的 `^build` 依赖图 | 验收前构建 event-contracts/shared/internal client；README 记录根测试与 filtered test 差异 | PASS：Worker 12/12、全量测试通过 |
+| 5 | Internal controller 默认返回 201 | NestJS `POST` 默认状态与 OpenAPI 200 合同不一致 | 显式 `@HttpCode(200)` 并重新生成 client | PASS：内部命令 E2E 的 PUBLISHED/ALREADY_APPLIED/STALE/NOT_DUE 均返回 200 |
+| 6 | WSL 沙箱下 Next/Turbopack 构建尝试绑定内部端口时报 EPERM | 运行环境禁止 Turbopack CSS 子进程监听端口，与业务源码无关 | API/Worker/共享包按原命令构建；Web/Admin 使用 Next 官方 webpack 路径交叉验证 | PASS：两端均完成生产编译、类型检查、静态生成与 build trace；根 Turbopack 门禁保留环境限制记录 |
 
 验证脚本调用方式中的两处参数问题已在同一轮纠正后重新执行，未发现文档链接或秘密泄漏问题。
 
-知识沉淀：本方案和三份 ADR 是长生命周期架构记录；无需额外重复创建 handoff 或 pitfall 文档。
+知识沉淀：本方案、三份 ADR 和 README 的 workspace artifact 提示共同作为长生命周期记录。

@@ -11,8 +11,8 @@ This file fixes the initial implementation baseline. The accepted technology ADR
 | Language | TypeScript 5.9.3 | Supported by the selected ESLint and OpenAPI generation toolchain. |
 | Monorepo | Turborepo 2.10 | Matches ADR-0001 and provides task ordering/cache boundaries. |
 | Frontend | Next.js 16.3, React 19.2, Tailwind CSS 4.3 | Current compatible App Router baseline. |
-| Backend | NestJS 11.1, Prisma 7.9, PostgreSQL 17 | Matches ADR-0003 through ADR-0005. Prisma uses the PostgreSQL driver adapter. |
-| Async | BullMQ 6, Redis 7.4 | Matches ADR-0008 and keeps Redis non-canonical. |
+| Backend | NestJS 11.1, Prisma 7.9, PostgreSQL 18 | Matches ADR-0003 through ADR-0005. Prisma uses the PostgreSQL driver adapter and PostgreSQL-native UUID v7 IDs. |
+| Async | BullMQ 6, Redis 8 | Matches ADR-0008 and keeps Redis non-canonical. |
 | Contract | Nest Swagger, OpenAPI, openapi-typescript/openapi-fetch | Generated transport contracts; no shared Prisma or Nest DTO imports. |
 | Validation | ESLint 9.39, Prettier 3, Vitest 4 | Current Next.js plugins do not yet declare ESLint 10 compatibility; strict peer validation stays enabled. |
 

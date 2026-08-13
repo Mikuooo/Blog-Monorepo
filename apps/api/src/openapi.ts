@@ -11,7 +11,10 @@ import {
 } from './bootstrap.js'
 
 async function generateOpenApiDocuments() {
-  process.env.INTERNAL_API_TOKEN ??= 'openapi-generation-only'
+  process.env.INTERNAL_WORKLOAD_AUDIENCE ??= 'blog-api-internal'
+  process.env.INTERNAL_WORKLOAD_ISSUER ??= 'blog-worker'
+  process.env.INTERNAL_WORKLOAD_SECRET ??= 'openapi-generation-only-secret-32-bytes'
+  process.env.INTERNAL_WORKLOAD_SUBJECT ??= 'apps/worker'
   const app = await createApplication({ disableLogger: true })
   await app.init()
 

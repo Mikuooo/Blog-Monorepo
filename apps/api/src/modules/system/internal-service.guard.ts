@@ -1,9 +1,10 @@
-import { timingSafeEqual } from 'node:crypto'
-
-import { Injectable, UnauthorizedException } from '@nestjs/common'
+import { ForbiddenException, Inject, Injectable, UnauthorizedException } from '@nestjs/common'
 import type { CanActivate, ExecutionContext } from '@nestjs/common'
 
-import { requiredEnvironment } from '../../environment.js'
+import {
+  INTERNAL_WORKLOAD_SCOPE,
+  InternalWorkloadIdentityVerifier,
+} from './internal-workload-identity.js'
 
 type RequestHeaders = {
   headers: {
@@ -11,25 +12,22 @@ type RequestHeaders = {
   }
 }
 
-function matchesToken(provided: string, expected: string): boolean {
-  const providedBytes = Buffer.from(provided)
-  const expectedBytes = Buffer.from(expected)
-  return (
-    providedBytes.length === expectedBytes.length && timingSafeEqual(providedBytes, expectedBytes)
-  )
-}
-
 @Injectable()
 export class InternalServiceGuard implements CanActivate {
-  canActivate(context: ExecutionContext): boolean {
+  constructor(
+    @Inject(InternalWorkloadIdentityVerifier)
+    private readonly identityVerifier: InternalWorkloadIdentityVerifier,
+  ) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<RequestHeaders>()
     const authorization = request.headers.authorization
     const value = Array.isArray(authorization) ? authorization[0] : authorization
     const token = value?.startsWith('Bearer ') ? value.slice('Bearer '.length) : undefined
 
-    if (!token || !matchesToken(token, requiredEnvironment('INTERNAL_API_TOKEN'))) {
-      throw new UnauthorizedException('Invalid internal workload identity')
-    }
+    if (!token) throw new UnauthorizedException('Invalid internal workload identity')
+    const identity = await this.identityVerifier.verify(token)
+    if (!identity.scopes.has(INTERNAL_WORKLOAD_SCOPE)) throw new ForbiddenException('Missing scope')
     return true
   }
 }

@@ -9,12 +9,21 @@
   "exports": {
     ".": {
       "types": "./src/index.ts",
+      "development": "./src/index.ts",
+      "production": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./password": {
       "types": "./src/password.ts",
       "development": "./src/password.ts",
+      "production": "./dist/password.js",
       "default": "./dist/password.js"
+    },
+    "./workload-token": {
+      "types": "./src/workload-token.ts",
+      "development": "./src/workload-token.ts",
+      "production": "./dist/workload-token.js",
+      "default": "./dist/workload-token.js"
     }
   },
   "files": [

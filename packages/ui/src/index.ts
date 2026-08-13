@@ -1,5 +1,5 @@
-export { Button } from './button.js'
-export type { ButtonProps } from './button.js'
+export { Button } from './button'
+export type { ButtonProps } from './button'
 export { Badge } from './components/badge'
 export type { BadgeProps } from './components/badge'
 export { Card, CardContent, CardDescription, CardHeader, CardTitle } from './components/card'

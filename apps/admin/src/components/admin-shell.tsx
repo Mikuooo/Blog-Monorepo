@@ -4,7 +4,7 @@ import { Button } from '@blog/ui/components/button'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 
 import { Icon, type IconName } from './icons'
 
@@ -19,21 +19,87 @@ const navigation: Array<{ href: string; icon: IconName; label: string }> = [
   { href: '/settings', icon: 'settings', label: '系统设置' },
 ]
 
-function SidebarContent({ close }: { close?: () => void }) {
+type LayoutMode = 'inset' | 'classic'
+
+const layoutStorageKey = 'admin-layout-mode'
+const layoutChangeEvent = 'admin-layout-change'
+const sidebarStorageKey = 'admin-sidebar-collapsed'
+const sidebarChangeEvent = 'admin-sidebar-change'
+
+function getLayoutSnapshot(): LayoutMode {
+  return window.localStorage.getItem(layoutStorageKey) === 'classic' ? 'classic' : 'inset'
+}
+
+function subscribeToLayoutChange(onStoreChange: () => void) {
+  window.addEventListener('storage', onStoreChange)
+  window.addEventListener(layoutChangeEvent, onStoreChange)
+
+  return () => {
+    window.removeEventListener('storage', onStoreChange)
+    window.removeEventListener(layoutChangeEvent, onStoreChange)
+  }
+}
+
+function getSidebarSnapshot() {
+  return window.localStorage.getItem(sidebarStorageKey) === 'true'
+}
+
+function subscribeToSidebarChange(onStoreChange: () => void) {
+  window.addEventListener('storage', onStoreChange)
+  window.addEventListener(sidebarChangeEvent, onStoreChange)
+
+  return () => {
+    window.removeEventListener('storage', onStoreChange)
+    window.removeEventListener(sidebarChangeEvent, onStoreChange)
+  }
+}
+
+function SidebarContent({
+  close,
+  collapsed = false,
+  onToggleCollapse,
+}: {
+  close?: () => void
+  collapsed?: boolean
+  onToggleCollapse?: () => void
+}) {
   const pathname = usePathname()
   return (
     <div className="flex h-full flex-col">
-      <div className="flex h-16 items-center gap-3 border-b px-5">
-        <div className="grid size-9 place-items-center rounded-xl bg-primary text-sm font-black text-primary-foreground">
+      <div
+        className={`flex h-16 items-center border-b transition-[padding] duration-300 ease-in-out ${collapsed ? 'justify-center px-2' : 'gap-2 px-3'}`}
+      >
+        <div
+          className={`grid size-9 shrink-0 place-items-center rounded-xl bg-primary text-sm font-black text-primary-foreground transition-all duration-300 ease-in-out ${collapsed ? 'w-0 scale-75 overflow-hidden opacity-0' : 'w-9 scale-100 opacity-100'}`}
+        >
           B
         </div>
-        <div>
-          <p className="text-sm font-bold leading-none">Blog Platform</p>
+        <div
+          className={`min-w-0 overflow-hidden transition-all duration-300 ease-in-out ${collapsed ? 'w-0 flex-none opacity-0' : 'flex-1 opacity-100'}`}
+        >
+          <p className="truncate text-sm font-bold leading-none">Blog Platform</p>
           <p className="mt-1 text-xs text-muted-foreground">内容管理中心</p>
         </div>
+        {onToggleCollapse ? (
+          <Button
+            aria-label={collapsed ? '展开侧边栏' : '收起侧边栏'}
+            className="shrink-0"
+            onClick={onToggleCollapse}
+            size="icon"
+            title={collapsed ? '展开侧边栏' : '收起侧边栏'}
+            variant="ghost"
+          >
+            <Icon className="size-4" name="menu" />
+          </Button>
+        ) : null}
       </div>
-      <nav className="flex-1 space-y-1 overflow-y-auto p-3" aria-label="后台主导航">
-        <p className="px-3 pb-2 pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <nav
+        className={`flex-1 space-y-1 overflow-y-auto ${collapsed ? 'p-2' : 'p-3'}`}
+        aria-label="后台主导航"
+      >
+        <p
+          className={`px-3 pb-2 pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${collapsed ? 'sr-only' : ''}`}
+        >
           管理菜单
         </p>
         {navigation.map((item) => {
@@ -42,37 +108,41 @@ function SidebarContent({ close }: { close?: () => void }) {
           return unavailable ? (
             <span
               key={item.href}
-              className="flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm text-muted-foreground/65"
+              className={`flex min-h-11 items-center rounded-lg text-sm text-muted-foreground/65 ${collapsed ? 'justify-center px-2' : 'gap-3 px-3'}`}
               title="后续批次开放"
             >
               <Icon className="size-5" name={item.icon} />
-              <span>{item.label}</span>
-              <span className="ml-auto text-[10px] font-semibold">即将开放</span>
+              <span className={collapsed ? 'sr-only' : ''}>{item.label}</span>
+              {collapsed ? null : <span className="ml-auto text-[10px] font-semibold">即将开放</span>}
             </span>
           ) : (
             <Link
               key={item.href}
               aria-current={active ? 'page' : undefined}
-              className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors ${active ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-primary-soft hover:text-foreground'}`}
+              className={`flex min-h-11 items-center rounded-lg text-sm font-medium transition-colors ${collapsed ? 'justify-center px-2' : 'gap-3 px-3'} ${active ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-primary-soft hover:text-foreground'}`}
               href={item.href}
+              title={collapsed ? item.label : undefined}
               {...(close ? { onClick: close } : {})}
             >
               <Icon className="size-5" name={item.icon} />
-              {item.label}
+              <span className={collapsed ? 'sr-only' : ''}>{item.label}</span>
             </Link>
           )
         })}
       </nav>
-      <div className="border-t p-3">
-        <div className="flex items-center gap-3 rounded-xl bg-muted/70 p-3">
+      <div className={`border-t ${collapsed ? 'p-2' : 'p-3'}`}>
+        <div
+          className={`flex items-center rounded-xl bg-muted/70 ${collapsed ? 'justify-center p-2' : 'gap-3 p-3'}`}
+          title={collapsed ? '内容管理员' : undefined}
+        >
           <div className="grid size-9 place-items-center rounded-full bg-card text-primary-hover shadow-sm">
             <Icon className="size-5" name="user" />
           </div>
-          <div className="min-w-0 flex-1">
+          <div className={collapsed ? 'sr-only' : 'min-w-0 flex-1'}>
             <p className="truncate text-sm font-semibold">内容管理员</p>
             <p className="truncate text-xs text-muted-foreground">admin@blog.local</p>
           </div>
-          <Icon className="size-4 text-muted-foreground" name="chevron-down" />
+          {collapsed ? null : <Icon className="size-4 text-muted-foreground" name="chevron-down" />}
         </div>
       </div>
     </div>
@@ -81,16 +151,41 @@ function SidebarContent({ close }: { close?: () => void }) {
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const layoutMode = useSyncExternalStore(subscribeToLayoutChange, getLayoutSnapshot, () => 'inset')
+  const sidebarCollapsed = useSyncExternalStore(
+    subscribeToSidebarChange,
+    getSidebarSnapshot,
+    () => false,
+  )
+  const inset = layoutMode === 'inset'
+
+  function toggleLayout() {
+    const nextLayout = inset ? 'classic' : 'inset'
+    window.localStorage.setItem(layoutStorageKey, nextLayout)
+    window.dispatchEvent(new Event(layoutChangeEvent))
+  }
+
+  function toggleSidebar() {
+    window.localStorage.setItem(sidebarStorageKey, String(!sidebarCollapsed))
+    window.dispatchEvent(new Event(sidebarChangeEvent))
+  }
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className={inset ? 'min-h-screen bg-muted/40' : 'min-h-screen bg-background'}>
       <a
         className="fixed left-4 top-3 z-50 -translate-y-20 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground focus:translate-y-0"
         href="#main-content"
       >
         跳到主要内容
       </a>
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r bg-card lg:block">
-        <SidebarContent />
+      <aside
+        className={`fixed z-30 hidden bg-card transition-[width,inset,border-radius] duration-300 ease-in-out lg:block ${
+          inset
+            ? `inset-y-4 left-4 rounded-2xl border shadow-sm ${sidebarCollapsed ? 'w-16' : 'w-48'}`
+            : `inset-y-0 left-0 border-r ${sidebarCollapsed ? 'w-16' : 'w-48'}`
+        }`}
+      >
+        <SidebarContent collapsed={sidebarCollapsed} onToggleCollapse={toggleSidebar} />
       </aside>
       {mobileOpen ? (
         <div className="fixed inset-0 z-40 lg:hidden">
@@ -117,8 +212,20 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </aside>
         </div>
       ) : null}
-      <div className="lg:pl-64">
-        <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b bg-background/92 px-4 backdrop-blur sm:px-6 lg:px-8">
+      <div
+        className={`transition-[margin,padding] duration-300 ease-in-out ${
+          inset
+            ? `p-3 sm:p-4 lg:pl-4 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-52'}`
+            : sidebarCollapsed
+              ? 'lg:pl-16'
+              : 'lg:pl-48'
+        }`}
+      >
+        <header
+          className={`sticky z-20 flex h-16 items-center gap-3 bg-background/92 px-4 backdrop-blur sm:px-6 lg:px-8 ${
+            inset ? 'top-3 rounded-2xl border shadow-sm sm:top-4' : 'top-0 border-b'
+          }`}
+        >
           <Button
             aria-controls="mobile-navigation"
             aria-expanded={mobileOpen}
@@ -149,6 +256,15 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </kbd>
           </div>
           <div className="ml-auto flex items-center gap-2">
+            <Button
+              aria-label={inset ? '切换为全宽经典布局' : '切换为内嵌圆角布局'}
+              onClick={toggleLayout}
+              size="icon"
+              title={inset ? '切换为全宽经典布局' : '切换为内嵌圆角布局'}
+              variant="ghost"
+            >
+              <Icon className="size-5" name={inset ? 'menu' : 'dashboard'} />
+            </Button>
             <Button aria-label="查看通知" size="icon" variant="ghost">
               <Icon className="size-5" name="bell" />
             </Button>
@@ -162,7 +278,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
             </div>
           </div>
         </header>
-        <main className="mx-auto max-w-[1600px] p-4 sm:p-6 lg:p-8" id="main-content">
+        <main
+          className={`mx-auto max-w-[1600px] ${
+            inset ? 'px-1 pb-5 pt-7 sm:px-2 sm:pb-6 sm:pt-8 lg:px-4' : 'p-4 sm:p-6 lg:p-8'
+          }`}
+          id="main-content"
+        >
           {children}
         </main>
       </div>

@@ -1,5 +1,5 @@
 {
-  "name": "blog-platform",
+  "name": "YumeSekai",
   "version": "0.1.0",
   "private": true,
   "description": "Blog / CMS modular monolith monorepo",
@@ -9,18 +9,23 @@
     "pnpm": "10.34.5"
   },
   "scripts": {
-    "predev": "pnpm generate && turbo run build --filter='./packages/*'",
-    "dev": "turbo run dev --parallel",
+    "predev": "pnpm generate",
+    "dev": "turbo run dev",
     "build": "pnpm generate && turbo run build",
     "lint": "turbo run lint && node tools/architecture/check-import-boundaries.mjs",
     "typecheck": "pnpm generate && turbo run typecheck",
     "test": "turbo run test",
+    "test:integration": "pnpm db:migrate:test && pnpm --filter @blog/api test:integration",
     "test:coverage": "turbo run test:coverage",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "generate": "pnpm db:generate && pnpm api:generate",
     "db:generate": "pnpm --filter @blog/database prisma:generate",
     "db:validate": "pnpm --filter @blog/database prisma:validate",
+    "db:migrate": "pnpm --filter @blog/database prisma:migrate:dev",
+    "db:migrate:deploy": "pnpm --filter @blog/database prisma:migrate:deploy",
+    "db:migrate:test": "pnpm --filter @blog/database prisma:migrate:test",
+    "db:seed": "pnpm --filter @blog/database prisma:seed",
     "api:generate": "pnpm --filter @blog/api openapi:generate && pnpm --filter @blog/api-types generate && pnpm --filter @blog/internal-api-client generate"
   },
   "devDependencies": {

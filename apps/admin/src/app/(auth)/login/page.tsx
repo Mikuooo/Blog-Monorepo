@@ -20,19 +20,7 @@ export default function LoginPage() {
           </div>
           <span className="font-semibold">Blog Platform</span>
         </div>
-        <div className="relative max-w-xl">
-          <Badge className="mb-6 border-white/15 bg-white/10 text-white" variant="outline">
-            Editorial Workspace
-          </Badge>
-          <h1 className="text-5xl font-bold leading-tight tracking-tight xl:text-6xl">
-            让每一次创作，
-            <br />
-            都有清晰的去处。
-          </h1>
-          <p className="mt-6 max-w-lg text-lg leading-8 text-slate-300">
-            从灵感、草稿到发布，用一个安静、专注的工作台管理内容全生命周期。
-          </p>
-        </div>
+
         <p className="relative text-sm text-slate-400">© 2026 Blog Platform · 内容管理中心</p>
       </section>
       <section className="relative z-10 flex min-h-screen items-center justify-center px-5 py-12 sm:px-10">

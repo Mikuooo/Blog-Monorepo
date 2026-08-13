@@ -442,6 +442,23 @@ Do not depend on real paid AI APIs in the default automated test suite.
 
 ## 15. Agent Workflow
 
+### Command Execution Approval
+
+Before executing any command, the agent must:
+
+1. present the execution plan to the user;
+2. list every file expected to be created, modified, or deleted;
+3. wait for the user's explicit confirmation.
+
+This requirement applies to every command, including read-only inspection, validation, generation,
+installation, test, build, Git, database, Docker, and deployment commands. Approval for one command
+or command batch does not authorize a later command or batch; the agent must present a new plan and
+obtain confirmation again.
+
+After the approved command or command batch finishes, the agent must immediately list the files that
+were actually created, modified, or deleted. If no files changed, state `No files changed` explicitly.
+The actual file list must distinguish unexpected changes from the planned changes.
+
 Before implementing:
 
 1. Understand the requested behavior.

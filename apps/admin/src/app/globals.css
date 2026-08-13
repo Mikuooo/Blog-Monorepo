@@ -75,11 +75,13 @@ select {
 }
 
 .rain-login-card {
-  background: rgba(249, 255, 254, 0.9);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0), rgba(241, 250, 249, 0));
   box-shadow:
     0 28px 80px rgba(0, 13, 12, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(24px) saturate(118%);
+    inset 0 1px 0 rgba(255, 255, 255, 0.88),
+    inset 0 0 32px rgba(255, 255, 255, 0.12);
+  -webkit-backdrop-filter: blur(10px) saturate(100%);
+  backdrop-filter: blur(10px) saturate(100%);
 }
 
 @supports not (backdrop-filter: blur(1px)) {

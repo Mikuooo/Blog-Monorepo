@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+    "/api/v1/internal/articles/{articleId}/publish-scheduled": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Execute the canonical scheduled publication command */
+        post: operations["publishScheduledArticle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/internal/health": {
         parameters: {
             query?: never;
@@ -25,6 +42,35 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        PublishScheduledArticleRequestDto: {
+            /**
+             * @example 1
+             * @enum {number}
+             */
+            contractVersion: 1;
+            /** @example 7 */
+            scheduleVersion: number;
+        };
+        PublishScheduledArticleResponseDto: {
+            /** Format: uuid */
+            articleId: string;
+            /** @enum {string} */
+            outcome: "PUBLISHED" | "ALREADY_APPLIED" | "STALE" | "NOT_DUE";
+            /** Format: date-time */
+            publishedAt?: string;
+            /** Format: date-time */
+            retryAt?: string;
+            /** Format: uuid */
+            revisionId?: string;
+        };
+        InternalCommandErrorResponseDto: {
+            /** @example ARTICLE_NOT_FOUND */
+            code: string;
+            /** @example The scheduled publication command could not be completed. */
+            message: string;
+            /** @example 404 */
+            statusCode: number;
+        };
         HealthResponseDto: {
             /**
              * @example api
@@ -46,6 +92,58 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    publishScheduledArticle: {
+        parameters: {
+            query?: never;
+            header: {
+                "X-Correlation-ID"?: string;
+                "Idempotency-Key": string;
+            };
+            path: {
+                articleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PublishScheduledArticleRequestDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublishScheduledArticleResponseDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalCommandErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalCommandErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InternalCommandErrorResponseDto"];
+                };
+            };
+        };
+    };
     getInternalHealth: {
         parameters: {
             query?: never;

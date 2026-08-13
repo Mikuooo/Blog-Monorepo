@@ -1,6 +1,99 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/internal/articles/{articleId}/publish-scheduled": {
+      "post": {
+        "operationId": "publishScheduledArticle",
+        "parameters": [
+          {
+            "name": "articleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "X-Correlation-ID",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishScheduledArticleRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublishScheduledArticleResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalCommandErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalCommandErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InternalCommandErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "internal-workload": []
+          }
+        ],
+        "summary": "Execute the canonical scheduled publication command",
+        "tags": [
+          "internal-articles"
+        ]
+      }
+    },
     "/api/v1/internal/health": {
       "get": {
         "operationId": "getInternalHealth",
@@ -46,6 +139,83 @@
       }
     },
     "schemas": {
+      "PublishScheduledArticleRequestDto": {
+        "type": "object",
+        "properties": {
+          "contractVersion": {
+            "type": "number",
+            "enum": [
+              1
+            ],
+            "example": 1
+          },
+          "scheduleVersion": {
+            "type": "number",
+            "example": 7,
+            "minimum": 1
+          }
+        },
+        "required": [
+          "contractVersion",
+          "scheduleVersion"
+        ]
+      },
+      "PublishScheduledArticleResponseDto": {
+        "type": "object",
+        "properties": {
+          "articleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "PUBLISHED",
+              "ALREADY_APPLIED",
+              "STALE",
+              "NOT_DUE"
+            ]
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "retryAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "revisionId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "articleId",
+          "outcome"
+        ]
+      },
+      "InternalCommandErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "ARTICLE_NOT_FOUND"
+          },
+          "message": {
+            "type": "string",
+            "example": "The scheduled publication command could not be completed."
+          },
+          "statusCode": {
+            "type": "number",
+            "example": 404
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "statusCode"
+        ]
+      },
       "HealthResponseDto": {
         "type": "object",
         "properties": {

@@ -5,6 +5,7 @@ import helmet from 'helmet'
 import { Logger } from 'nestjs-pino'
 
 import { AppModule } from './app.module.js'
+import { InternalArticlesModule } from './modules/articles/internal-articles.module.js'
 import { AuthModule } from './modules/auth/auth.module.js'
 import { sessionCookieName } from './modules/auth/auth-cookie.js'
 import { trustedOrigins } from './modules/auth/guards/trusted-origin.guard.js'
@@ -63,7 +64,7 @@ export function createInternalOpenApiDocument(app: Awaited<ReturnType<typeof Nes
     )
     .build()
   return SwaggerModule.createDocument(app, config, {
-    deepScanRoutes: true,
-    include: [InternalSystemModule],
+    deepScanRoutes: false,
+    include: [InternalSystemModule, InternalArticlesModule],
   })
 }

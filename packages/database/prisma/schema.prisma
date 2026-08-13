@@ -7,117 +7,605 @@ datasource db {
   provider = "postgresql"
 }
 
+enum UserStatus {
+  ACTIVE   @map("active")
+  DISABLED @map("disabled")
+
+  @@map("user_status")
+}
+
+enum ArticleStatus {
+  DRAFT     @map("draft")
+  SCHEDULED @map("scheduled")
+  PUBLISHED @map("published")
+  ARCHIVED  @map("archived")
+
+  @@map("article_status")
+}
+
+enum ArticleVisibility {
+  PUBLIC   @map("public")
+  PRIVATE  @map("private")
+  PASSWORD @map("password")
+
+  @@map("article_visibility")
+}
+
+enum CommentStatus {
+  PENDING  @map("pending")
+  APPROVED @map("approved")
+  REJECTED @map("rejected")
+  SPAM     @map("spam")
+
+  @@map("comment_status")
+}
+
+enum MediaType {
+  IMAGE    @map("image")
+  VIDEO    @map("video")
+  AUDIO    @map("audio")
+  DOCUMENT @map("document")
+  OTHER    @map("other")
+
+  @@map("media_type")
+}
+
+enum StorageProvider {
+  S3    @map("s3")
+  R2    @map("r2")
+  MINIO @map("minio")
+
+  @@map("storage_provider")
+}
+
+enum PageStatus {
+  DRAFT     @map("draft")
+  PUBLISHED @map("published")
+  ARCHIVED  @map("archived")
+
+  @@map("page_status")
+}
+
+enum MenuItemType {
+  INTERNAL @map("internal")
+  EXTERNAL @map("external")
+  CATEGORY @map("category")
+  PAGE     @map("page")
+
+  @@map("menu_item_type")
+}
+
+enum SettingType {
+  STRING  @map("string")
+  NUMBER  @map("number")
+  BOOLEAN @map("boolean")
+  JSON    @map("json")
+
+  @@map("setting_type")
+}
+
 enum CommandReceiptStatus {
-  PROCESSING
-  COMPLETED
-  FAILED
+  PROCESSING @map("processing")
+  COMPLETED  @map("completed")
+  FAILED     @map("failed")
+
+  @@map("command_receipt_status")
 }
 
 enum OutboxDeliveryStatus {
-  PENDING
-  LEASED
-  ENQUEUED
-  ACKED
-  DEAD
+  PENDING  @map("pending")
+  LEASED   @map("leased")
+  ENQUEUED @map("enqueued")
+  ACKED    @map("acked")
+  DEAD     @map("dead")
+
+  @@map("outbox_delivery_status")
 }
 
 enum ConsumerInboxStatus {
-  PROCESSING
-  RETRYABLE
-  COMPLETED
-  DEAD
+  PROCESSING @map("processing")
+  RETRYABLE  @map("retryable")
+  COMPLETED  @map("completed")
+  DEAD       @map("dead")
+
+  @@map("consumer_inbox_status")
+}
+
+model User {
+  id            String            @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  email         String            @unique(map: "users_email_uq") @db.VarChar(320)
+  username      String            @unique(map: "users_username_uq") @db.VarChar(80)
+  passwordHash  String            @map("password_hash") @db.VarChar(255)
+  displayName   String            @map("display_name") @db.VarChar(120)
+  status        UserStatus        @default(ACTIVE)
+  avatarId      String?           @map("avatar_id") @db.Uuid
+  lastLoginAt   DateTime?         @map("last_login_at") @db.Timestamptz(3)
+  createdAt     DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime          @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt     DateTime?         @map("deleted_at") @db.Timestamptz(3)
+  avatar        Media?            @relation("UserAvatar", fields: [avatarId], references: [id], onDelete: SetNull)
+  sessions      LoginSession[]
+  roles         UserRole[]
+  articles      Article[]         @relation("ArticleAuthor")
+  revisions     ArticleRevision[] @relation("RevisionCreator")
+  comments      Comment[]
+  uploadedMedia Media[]           @relation("MediaUploader")
+  pages         Page[]            @relation("PageAuthor")
+  auditLogs     AuditLog[]
+  aiUsages      AIUsage[]
+
+  @@index([status, createdAt], map: "users_status_created_idx")
+  @@index([deletedAt], map: "users_deleted_idx")
+  @@map("users")
+}
+
+model LoginSession {
+  id         String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  tokenHash  String    @unique(map: "login_sessions_token_hash_uq") @map("token_hash") @db.Char(64)
+  ip         String?   @db.Inet
+  userAgent  String?   @map("user_agent") @db.VarChar(500)
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastSeenAt DateTime? @map("last_seen_at") @db.Timestamptz(3)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt], map: "login_sessions_user_expires_idx")
+  @@index([expiresAt], map: "login_sessions_expires_idx")
+  @@map("login_sessions")
+}
+
+model Role {
+  id          String           @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  code        String           @unique(map: "roles_code_uq") @db.VarChar(80)
+  name        String           @db.VarChar(120)
+  description String?          @db.VarChar(500)
+  isSystem    Boolean          @default(false) @map("is_system")
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime         @updatedAt @map("updated_at") @db.Timestamptz(3)
+  users       UserRole[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String           @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  code        String           @unique(map: "permissions_code_uq") @db.VarChar(120)
+  description String?          @db.VarChar(500)
+  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  roles       RolePermission[]
+
+  @@map("permissions")
+}
+
+model UserRole {
+  userId     String   @map("user_id") @db.Uuid
+  roleId     String   @map("role_id") @db.Uuid
+  assignedAt DateTime @default(now()) @map("assigned_at") @db.Timestamptz(3)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@index([roleId], map: "user_roles_role_idx")
+  @@map("user_roles")
+}
+
+model RolePermission {
+  roleId       String     @map("role_id") @db.Uuid
+  permissionId String     @map("permission_id") @db.Uuid
+  grantedAt    DateTime   @default(now()) @map("granted_at") @db.Timestamptz(3)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId], map: "role_permissions_permission_idx")
+  @@map("role_permissions")
+}
+
+model Article {
+  id              String             @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  title           String             @db.VarChar(240)
+  slug            String             @unique(map: "articles_slug_uq") @db.VarChar(240)
+  summary         String?            @db.Text
+  content         String             @db.Text
+  contentHtml     String?            @map("content_html") @db.Text
+  coverId         String?            @map("cover_id") @db.Uuid
+  authorId        String             @map("author_id") @db.Uuid
+  categoryId      String?            @map("category_id") @db.Uuid
+  status          ArticleStatus      @default(DRAFT)
+  visibility      ArticleVisibility  @default(PUBLIC)
+  passwordHash    String?            @map("password_hash") @db.VarChar(255)
+  seoTitle        String?            @map("seo_title") @db.VarChar(240)
+  seoDescription  String?            @map("seo_description") @db.VarChar(500)
+  canonicalUrl    String?            @map("canonical_url") @db.VarChar(2048)
+  allowComment    Boolean            @default(true) @map("allow_comment")
+  isPinned        Boolean            @default(false) @map("is_pinned")
+  isFeatured      Boolean            @default(false) @map("is_featured")
+  wordCount       Int                @default(0) @map("word_count")
+  readingTime     Int                @default(0) @map("reading_time")
+  viewCount       BigInt             @default(0) @map("view_count")
+  commentCount    Int                @default(0) @map("comment_count")
+  likeCount       Int                @default(0) @map("like_count")
+  version         Int                @default(1)
+  scheduleVersion Int                @default(1) @map("schedule_version")
+  publishedAt     DateTime?          @map("published_at") @db.Timestamptz(3)
+  scheduledAt     DateTime?          @map("scheduled_at") @db.Timestamptz(3)
+  createdAt       DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime           @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt       DateTime?          @map("deleted_at") @db.Timestamptz(3)
+  author          User               @relation("ArticleAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  category        Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  cover           Media?             @relation("ArticleCover", fields: [coverId], references: [id], onDelete: SetNull)
+  revisions       ArticleRevision[]
+  tags            ArticleTag[]
+  comments        Comment[]
+  dailyViews      ArticleViewDaily[]
+
+  @@index([status, publishedAt], map: "articles_status_published_idx")
+  @@index([categoryId, status, publishedAt], map: "articles_category_status_published_idx")
+  @@index([authorId, status], map: "articles_author_status_idx")
+  @@index([scheduledAt, status], map: "articles_scheduled_status_idx")
+  @@index([deletedAt], map: "articles_deleted_idx")
+  @@map("articles")
+}
+
+model ArticleRevision {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  articleId   String   @map("article_id") @db.Uuid
+  createdById String   @map("created_by_id") @db.Uuid
+  version     Int
+  title       String   @db.VarChar(240)
+  summary     String?  @db.Text
+  content     String   @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  createdBy   User     @relation("RevisionCreator", fields: [createdById], references: [id], onDelete: Restrict)
+
+  @@unique([articleId, version], map: "article_revisions_article_version_uq")
+  @@index([createdById], map: "article_revisions_creator_idx")
+  @@map("article_revisions")
+}
+
+model Category {
+  id             String     @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  parentId       String?    @map("parent_id") @db.Uuid
+  name           String     @db.VarChar(120)
+  slug           String     @unique(map: "categories_slug_uq") @db.VarChar(160)
+  description    String?    @db.Text
+  coverId        String?    @map("cover_id") @db.Uuid
+  sortOrder      Int        @default(0) @map("sort_order")
+  seoTitle       String?    @map("seo_title") @db.VarChar(240)
+  seoDescription String?    @map("seo_description") @db.VarChar(500)
+  createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime?  @map("deleted_at") @db.Timestamptz(3)
+  parent         Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Restrict)
+  children       Category[] @relation("CategoryTree")
+  cover          Media?     @relation("CategoryCover", fields: [coverId], references: [id], onDelete: SetNull)
+  articles       Article[]
+  menuItems      MenuItem[]
+
+  @@index([parentId, sortOrder], map: "categories_parent_sort_idx")
+  @@index([deletedAt], map: "categories_deleted_idx")
+  @@map("categories")
+}
+
+model Tag {
+  id          String       @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name        String       @unique(map: "tags_name_uq") @db.VarChar(120)
+  slug        String       @unique(map: "tags_slug_uq") @db.VarChar(160)
+  description String?      @db.Text
+  createdAt   DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  articles    ArticleTag[]
+
+  @@map("tags")
+}
+
+model ArticleTag {
+  articleId String   @map("article_id") @db.Uuid
+  tagId     String   @map("tag_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, tagId])
+  @@index([tagId], map: "article_tags_tag_idx")
+  @@map("article_tags")
+}
+
+model Comment {
+  id        String        @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  articleId String        @map("article_id") @db.Uuid
+  userId    String?       @map("user_id") @db.Uuid
+  parentId  String?       @map("parent_id") @db.Uuid
+  replyToId String?       @map("reply_to_id") @db.Uuid
+  nickname  String?       @db.VarChar(120)
+  email     String?       @db.VarChar(320)
+  website   String?       @db.VarChar(2048)
+  content   String        @db.Text
+  status    CommentStatus @default(PENDING)
+  ip        String?       @db.Inet
+  userAgent String?       @map("user_agent") @db.VarChar(500)
+  likeCount Int           @default(0) @map("like_count")
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt DateTime?     @map("deleted_at") @db.Timestamptz(3)
+  article   Article       @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  user      User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  parent    Comment?      @relation("CommentThread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[]     @relation("CommentThread")
+  replyTo   Comment?      @relation("CommentReplyTarget", fields: [replyToId], references: [id], onDelete: SetNull)
+  repliedBy Comment[]     @relation("CommentReplyTarget")
+
+  @@index([articleId, status, createdAt], map: "comments_article_status_created_idx")
+  @@index([parentId, createdAt], map: "comments_parent_created_idx")
+  @@index([userId], map: "comments_user_idx")
+  @@index([deletedAt], map: "comments_deleted_idx")
+  @@map("comments")
+}
+
+model Media {
+  id              String          @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  filename        String          @db.VarChar(255)
+  originalName    String          @map("original_name") @db.VarChar(255)
+  mediaType       MediaType       @map("media_type")
+  mimeType        String          @map("mime_type") @db.VarChar(160)
+  extension       String?         @db.VarChar(32)
+  size            BigInt
+  width           Int?
+  height          Int?
+  storageProvider StorageProvider @map("storage_provider")
+  bucket          String          @db.VarChar(255)
+  objectKey       String          @unique(map: "media_object_key_uq") @map("object_key") @db.VarChar(1024)
+  url             String          @db.VarChar(2048)
+  hash            String?         @db.Char(64)
+  blurhash        String?         @db.VarChar(255)
+  uploaderId      String?         @map("uploader_id") @db.Uuid
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  deletedAt       DateTime?       @map("deleted_at") @db.Timestamptz(3)
+  uploader        User?           @relation("MediaUploader", fields: [uploaderId], references: [id], onDelete: SetNull)
+  avatarFor       User[]          @relation("UserAvatar")
+  articleCovers   Article[]       @relation("ArticleCover")
+  categoryCovers  Category[]      @relation("CategoryCover")
+
+  @@index([uploaderId, createdAt], map: "media_uploader_created_idx")
+  @@index([mediaType, createdAt], map: "media_type_created_idx")
+  @@index([deletedAt], map: "media_deleted_idx")
+  @@map("media")
+}
+
+model Page {
+  id             String     @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  title          String     @db.VarChar(240)
+  slug           String     @unique(map: "pages_slug_uq") @db.VarChar(240)
+  content        String     @db.Text
+  contentHtml    String?    @map("content_html") @db.Text
+  status         PageStatus @default(DRAFT)
+  seoTitle       String?    @map("seo_title") @db.VarChar(240)
+  seoDescription String?    @map("seo_description") @db.VarChar(500)
+  authorId       String     @map("author_id") @db.Uuid
+  publishedAt    DateTime?  @map("published_at") @db.Timestamptz(3)
+  createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime?  @map("deleted_at") @db.Timestamptz(3)
+  author         User       @relation("PageAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+  menuItems      MenuItem[]
+
+  @@index([status, publishedAt], map: "pages_status_published_idx")
+  @@index([deletedAt], map: "pages_deleted_idx")
+  @@map("pages")
+}
+
+model Menu {
+  id        String     @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  code      String     @unique(map: "menus_code_uq") @db.VarChar(80)
+  name      String     @db.VarChar(120)
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+  items     MenuItem[]
+
+  @@map("menus")
+}
+
+model MenuItem {
+  id         String       @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  menuId     String       @map("menu_id") @db.Uuid
+  parentId   String?      @map("parent_id") @db.Uuid
+  type       MenuItemType
+  label      String       @db.VarChar(120)
+  url        String?      @db.VarChar(2048)
+  pageId     String?      @map("page_id") @db.Uuid
+  categoryId String?      @map("category_id") @db.Uuid
+  sortOrder  Int          @default(0) @map("sort_order")
+  isVisible  Boolean      @default(true) @map("is_visible")
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  menu       Menu         @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  parent     MenuItem?    @relation("MenuItemTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children   MenuItem[]   @relation("MenuItemTree")
+  page       Page?        @relation(fields: [pageId], references: [id], onDelete: SetNull)
+  category   Category?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([menuId, parentId, sortOrder], map: "menu_items_menu_parent_sort_idx")
+  @@index([pageId], map: "menu_items_page_idx")
+  @@index([categoryId], map: "menu_items_category_idx")
+  @@map("menu_items")
+}
+
+model Link {
+  id          String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name        String   @db.VarChar(160)
+  url         String   @db.VarChar(2048)
+  description String?  @db.VarChar(500)
+  logoUrl     String?  @map("logo_url") @db.VarChar(2048)
+  sortOrder   Int      @default(0) @map("sort_order")
+  isVisible   Boolean  @default(true) @map("is_visible")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([isVisible, sortOrder], map: "links_visible_sort_idx")
+  @@map("links")
+}
+
+model Setting {
+  id          String      @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  key         String      @unique(map: "settings_key_uq") @db.VarChar(160)
+  value       Json        @db.JsonB
+  type        SettingType
+  description String?     @db.VarChar(500)
+  isPublic    Boolean     @default(false) @map("is_public")
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([isPublic, key], map: "settings_public_key_idx")
+  @@map("settings")
+}
+
+model AuditLog {
+  id         String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId     String?  @map("user_id") @db.Uuid
+  action     String   @db.VarChar(160)
+  resource   String   @db.VarChar(120)
+  resourceId String?  @map("resource_id") @db.VarChar(128)
+  before     Json?    @db.JsonB
+  after      Json?    @db.JsonB
+  ip         String?  @db.Inet
+  userAgent  String?  @map("user_agent") @db.VarChar(500)
+  requestId  String?  @map("request_id") @db.VarChar(128)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt], map: "audit_logs_user_created_idx")
+  @@index([resource, resourceId, createdAt], map: "audit_logs_resource_created_idx")
+  @@index([requestId], map: "audit_logs_request_idx")
+  @@map("audit_logs")
+}
+
+model ArticleViewDaily {
+  articleId String   @map("article_id") @db.Uuid
+  date      DateTime @db.Date
+  views     BigInt   @default(0)
+  visitors  BigInt   @default(0)
+  article   Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@id([articleId, date])
+  @@index([date], map: "article_view_daily_date_idx")
+  @@map("article_view_daily")
+}
+
+model AIUsage {
+  id           String   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  userId       String?  @map("user_id") @db.Uuid
+  provider     String   @db.VarChar(80)
+  model        String   @db.VarChar(160)
+  feature      String   @db.VarChar(120)
+  inputTokens  Int      @default(0) @map("input_tokens")
+  outputTokens Int      @default(0) @map("output_tokens")
+  durationMs   Int      @map("duration_ms")
+  cost         Decimal? @db.Decimal(18, 8)
+  requestId    String?  @map("request_id") @db.VarChar(128)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt], map: "ai_usage_user_created_idx")
+  @@index([provider, model, createdAt], map: "ai_usage_provider_model_created_idx")
+  @@index([requestId], map: "ai_usage_request_idx")
+  @@map("ai_usage")
 }
 
 model CommandReceipt {
-  id             String               @id @default(uuid()) @db.Uuid
-  commandType    String               @db.VarChar(120)
-  idempotencyKey String               @db.VarChar(200)
-  requestHash    String               @db.Char(64)
+  id             String               @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  commandType    String               @map("command_type") @db.VarChar(120)
+  idempotencyKey String               @map("idempotency_key") @db.VarChar(200)
+  requestHash    String               @map("request_hash") @db.Char(64)
   status         CommandReceiptStatus @default(PROCESSING)
   result         Json?                @db.JsonB
-  createdAt      DateTime             @default(now()) @db.Timestamptz(3)
-  completedAt    DateTime?            @db.Timestamptz(3)
+  createdAt      DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  completedAt    DateTime?            @map("completed_at") @db.Timestamptz(3)
 
-  @@unique([commandType, idempotencyKey], map: "command_receipt_type_key_uq")
-  @@index([status, createdAt], map: "command_receipt_status_created_idx")
-  @@map("command_receipt")
+  @@unique([commandType, idempotencyKey], map: "command_receipts_type_key_uq")
+  @@index([status, createdAt], map: "command_receipts_status_created_idx")
+  @@map("command_receipts")
 }
 
 model OutboxEvent {
-  id                String           @id @default(uuid()) @db.Uuid
-  eventName         String           @db.VarChar(120)
-  eventVersion      Int              @db.SmallInt
-  aggregateType     String           @db.VarChar(64)
-  aggregateId       String           @db.VarChar(128)
-  aggregateSequence BigInt
-  occurredAt        DateTime         @db.Timestamptz(3)
+  id                String           @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  eventName         String           @map("event_name") @db.VarChar(120)
+  eventVersion      Int              @map("event_version") @db.SmallInt
+  aggregateType     String           @map("aggregate_type") @db.VarChar(64)
+  aggregateId       String           @map("aggregate_id") @db.VarChar(128)
+  aggregateSequence BigInt           @map("aggregate_sequence")
+  occurredAt        DateTime         @map("occurred_at") @db.Timestamptz(3)
   payload           Json             @db.JsonB
-  payloadHash       String           @db.Char(64)
-  correlationId     String?          @db.VarChar(128)
-  causationId       String?          @db.VarChar(128)
-  actorId           String?          @db.VarChar(128)
+  payloadHash       String           @map("payload_hash") @db.Char(64)
+  correlationId     String?          @map("correlation_id") @db.VarChar(128)
+  causationId       String?          @map("causation_id") @db.VarChar(128)
+  actorId           String?          @map("actor_id") @db.VarChar(128)
   traceparent       String?          @db.VarChar(256)
-  createdAt         DateTime         @default(now()) @db.Timestamptz(3)
+  createdAt         DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
   deliveries        OutboxDelivery[]
 
-  @@unique([aggregateType, aggregateId, aggregateSequence, eventName], map: "outbox_event_dedupe_uq")
-  @@index([aggregateType, aggregateId, aggregateSequence], map: "outbox_event_aggregate_idx")
-  @@index([correlationId, createdAt], map: "outbox_event_correlation_idx")
-  @@index([createdAt], map: "outbox_event_created_idx")
-  @@map("outbox_event")
+  @@unique([aggregateType, aggregateId, aggregateSequence, eventName], map: "outbox_events_dedupe_uq")
+  @@index([aggregateType, aggregateId, aggregateSequence], map: "outbox_events_aggregate_idx")
+  @@index([correlationId, createdAt], map: "outbox_events_correlation_idx")
+  @@index([createdAt], map: "outbox_events_created_idx")
+  @@map("outbox_events")
 }
 
 model OutboxDelivery {
-  id                 String               @id @default(uuid()) @db.Uuid
-  eventId            String               @db.Uuid
-  consumerKey        String               @db.VarChar(120)
-  queueName          String               @db.VarChar(120)
-  jobName            String               @db.VarChar(120)
-  status             OutboxDeliveryStatus @default(PENDING)
-  dispatchAttempts   Int                  @default(0)
-  nextAttemptAt      DateTime             @default(now()) @db.Timestamptz(3)
-  leaseOwner         String?              @db.VarChar(128)
-  leaseExpiresAt     DateTime?            @db.Timestamptz(3)
-  bullmqJobId        String?              @db.VarChar(200)
-  enqueuedAt         DateTime?            @db.Timestamptz(3)
-  acknowledgedAt     DateTime?            @db.Timestamptz(3)
-  deadLetteredAt     DateTime?            @db.Timestamptz(3)
-  lastErrorKind      String?              @db.VarChar(64)
-  lastErrorCode      String?              @db.VarChar(64)
-  lastErrorSummary   String?              @db.VarChar(500)
-  lastErrorAt        DateTime?            @db.Timestamptz(3)
-  replayCount        Int                  @default(0)
-  createdAt          DateTime             @default(now()) @db.Timestamptz(3)
-  updatedAt          DateTime             @updatedAt @db.Timestamptz(3)
-  event              OutboxEvent          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  id               String               @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  eventId          String               @map("event_id") @db.Uuid
+  consumerKey      String               @map("consumer_key") @db.VarChar(120)
+  queueName        String               @map("queue_name") @db.VarChar(120)
+  jobName          String               @map("job_name") @db.VarChar(120)
+  status           OutboxDeliveryStatus @default(PENDING)
+  dispatchAttempts Int                  @default(0) @map("dispatch_attempts")
+  nextAttemptAt    DateTime             @default(now()) @map("next_attempt_at") @db.Timestamptz(3)
+  leaseOwner       String?              @map("lease_owner") @db.VarChar(128)
+  leaseExpiresAt   DateTime?            @map("lease_expires_at") @db.Timestamptz(3)
+  bullmqJobId      String?              @map("bullmq_job_id") @db.VarChar(200)
+  enqueuedAt       DateTime?            @map("enqueued_at") @db.Timestamptz(3)
+  acknowledgedAt   DateTime?            @map("acknowledged_at") @db.Timestamptz(3)
+  deadLetteredAt   DateTime?            @map("dead_lettered_at") @db.Timestamptz(3)
+  lastErrorKind    String?              @map("last_error_kind") @db.VarChar(64)
+  lastErrorCode    String?              @map("last_error_code") @db.VarChar(64)
+  lastErrorSummary String?              @map("last_error_summary") @db.VarChar(500)
+  lastErrorAt      DateTime?            @map("last_error_at") @db.Timestamptz(3)
+  replayCount      Int                  @default(0) @map("replay_count")
+  createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime             @updatedAt @map("updated_at") @db.Timestamptz(3)
+  event            OutboxEvent          @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
-  @@unique([eventId, consumerKey], map: "outbox_delivery_event_consumer_uq")
-  @@index([status, nextAttemptAt, createdAt, id], map: "outbox_delivery_claim_idx")
-  @@index([status, leaseExpiresAt], map: "outbox_delivery_lease_idx")
-  @@index([status, enqueuedAt], map: "outbox_delivery_unacked_idx")
-  @@index([status, deadLetteredAt], map: "outbox_delivery_dead_idx")
-  @@map("outbox_delivery")
+  @@unique([eventId, consumerKey], map: "outbox_deliveries_event_consumer_uq")
+  @@index([status, nextAttemptAt, createdAt, id], map: "outbox_deliveries_claim_idx")
+  @@index([status, leaseExpiresAt], map: "outbox_deliveries_lease_idx")
+  @@index([status, enqueuedAt], map: "outbox_deliveries_unacked_idx")
+  @@index([status, deadLetteredAt], map: "outbox_deliveries_dead_idx")
+  @@map("outbox_deliveries")
 }
 
 model ConsumerInbox {
-  consumerKey      String              @db.VarChar(120)
-  eventId          String              @db.Uuid
-  deliveryId       String              @db.Uuid
-  payloadHash      String              @db.Char(64)
-  status           ConsumerInboxStatus @default(PROCESSING)
-  attemptCount     Int                 @default(0)
-  leaseOwner       String?             @db.VarChar(128)
-  leaseExpiresAt   DateTime?           @db.Timestamptz(3)
-  aggregateType    String?             @db.VarChar(64)
-  aggregateId      String?             @db.VarChar(128)
-  aggregateSequence BigInt?
-  firstReceivedAt  DateTime            @default(now()) @db.Timestamptz(3)
-  lastReceivedAt   DateTime            @default(now()) @db.Timestamptz(3)
-  completedAt      DateTime?           @db.Timestamptz(3)
-  lastErrorKind    String?             @db.VarChar(64)
-  lastErrorCode    String?             @db.VarChar(64)
-  lastErrorSummary String?             @db.VarChar(500)
-  lastErrorAt      DateTime?           @db.Timestamptz(3)
+  consumerKey       String              @map("consumer_key") @db.VarChar(120)
+  eventId           String              @map("event_id") @db.Uuid
+  deliveryId        String              @map("delivery_id") @db.Uuid
+  payloadHash       String              @map("payload_hash") @db.Char(64)
+  status            ConsumerInboxStatus @default(PROCESSING)
+  attemptCount      Int                 @default(0) @map("attempt_count")
+  leaseOwner        String?             @map("lease_owner") @db.VarChar(128)
+  leaseExpiresAt    DateTime?           @map("lease_expires_at") @db.Timestamptz(3)
+  aggregateType     String?             @map("aggregate_type") @db.VarChar(64)
+  aggregateId       String?             @map("aggregate_id") @db.VarChar(128)
+  aggregateSequence BigInt?             @map("aggregate_sequence")
+  firstReceivedAt   DateTime            @default(now()) @map("first_received_at") @db.Timestamptz(3)
+  lastReceivedAt    DateTime            @default(now()) @map("last_received_at") @db.Timestamptz(3)
+  completedAt       DateTime?           @map("completed_at") @db.Timestamptz(3)
+  lastErrorKind     String?             @map("last_error_kind") @db.VarChar(64)
+  lastErrorCode     String?             @map("last_error_code") @db.VarChar(64)
+  lastErrorSummary  String?             @map("last_error_summary") @db.VarChar(500)
+  lastErrorAt       DateTime?           @map("last_error_at") @db.Timestamptz(3)
 
   @@id([consumerKey, eventId])
   @@unique([consumerKey, deliveryId], map: "consumer_inbox_delivery_uq")

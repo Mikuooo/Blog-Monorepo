@@ -21,8 +21,8 @@ ADR-0011、ADR-0012、ADR-0013 已转为 `Accepted`，分别固定：
 | Language | TypeScript 5.9.3 |
 | Monorepo | Turborepo 2.10.9 |
 | Web/Admin | Next.js 16.3.0、React 19.2、Tailwind CSS 4.3 |
-| API | NestJS 11.1、Prisma 7.9、PostgreSQL 17 |
-| Worker | BullMQ 6.0、Redis 7.4 |
+| API | NestJS 11.1、Prisma 7.9、PostgreSQL 18 |
+| Worker | BullMQ 6.0、Redis 8 |
 | Contract | Nest Swagger、openapi-typescript、openapi-fetch |
 | Quality | ESLint 9.39、Prettier 3.9、Vitest 4.1 |
 
@@ -36,7 +36,10 @@ TypeScript 5.9 和 ESLint 9 是有意的生态兼容基线：当前 OpenAPI 生�
 - `apps/api`：NestJS API、Pino、Helmet、ValidationPipe、公共/内部健康接口、Swagger/OpenAPI 生成及 E2E。
 - `apps/worker`：BullMQ Worker、版本化 payload 验证、结构化日志、Redis readiness、优雅停机。
 - 原规则要求的共享包，以及 `database`、`event-contracts`、`internal-api-client`、`test-utils`。
-- Prisma 7 PostgreSQL driver adapter、CommandReceipt/Outbox/Inbox schema 和首个 SQL migration。
+- Prisma 7 PostgreSQL driver adapter、完整 V1 Blog/CMS schema、CommandReceipt/Outbox/Inbox、UUID v7、全量 snake_case 映射和 Prisma CLI 生成的首个 migration。
+- 幂等 seed 初始化 `SUPER_ADMIN`、`ADMIN`、`EDITOR` 以及 37 项权限，并将全部权限授予 `SUPER_ADMIN`。
+- 第二优先级已实现 ArticlesModule 权威定时发布事务：Article、ArticleRevision、Audit、CommandReceipt、OutboxEvent 和三条 OutboxDelivery 在同一 PostgreSQL 事务提交。
+- 发布事务使用数据库时间、行锁、条件更新、事务级幂等锁和有界 serialization retry；Service 与合同不暴露 Prisma 类型。
 - 外部 `openapi.json` 与内部 `openapi.internal.json`，以及相互隔离的生成 client。
 - 静态架构检查：禁止跨 app import、前端导入后端专用包、Worker 导入 API 源码，以及非数据库包直接导入 Prisma。
 
@@ -48,24 +51,24 @@ TypeScript 5.9 和 ESLint 9 是有意的生态兼容基线：当前 OpenAPI 生�
 | --- | --- |
 | `pnpm db:validate` | 通过，Prisma schema valid |
 | `pnpm generate` | 通过，Prisma Client、外部/内部 OpenAPI 和两个 TS client 均生成 |
-| `pnpm lint` | 通过，16 个 workspace lint task；69 个源码文件通过架构边界扫描 |
+| `pnpm lint` | 通过，16 个 workspace lint task；77 个源码文件通过架构边界扫描 |
 | `pnpm format:check` | 通过 |
 | `pnpm typecheck` | 通过，15 个 workspace typecheck task |
-| `pnpm test` | 通过，24 个 Turbo task；11 个实际断言用例通过 |
+| `pnpm test` | 通过，24 个 Turbo task；12 个常规断言通过，数据库集成套件按设计由独立命令执行 |
+| `pnpm test:integration` | 通过，隔离 `blog_test` 中 6 个真实 PostgreSQL 事务用例通过 |
 | `pnpm build` | 通过，15 个 build task；Web/Admin 静态路由及 API/Worker 产物成功 |
 
 测试包含公共 API 200、内部 API 无身份 401、有效 workload token 200，并确认日志中的 Authorization 已脱敏。
 
-## 环境限制
+## 本地数据库基线
 
-当前受控 WSL 会话把 `/mnt/d` 暴露为只读 DrvFS 视图，并拒绝 pnpm 所需的 `futime`/`chmod`。因此：
-
-- 依赖已经在 Linux 文件系统完成安装和验证；
-- `pnpm-lock.yaml`、生成物和迁移已经同步到 D 盘；
-- D 盘上失败安装产生的局部 `node_modules` 已清理；
-- 在正常可写的 Windows 终端或 WSL ext4 工作区执行 `corepack pnpm install --frozen-lockfile` 即可恢复依赖目录。
-
-这不是源码或依赖冲突，不影响 Git 基线和可重复安装。
+- Docker Compose 实际运行 PostgreSQL 18.4 和 Redis 8.10，两个服务均通过健康检查并只映射到 `127.0.0.1`。
+- 本地开发数据库为 `blog_dev`；PostgreSQL 18 原生 `uuidv7()` 已通过查询验证。
+- Prisma migration `20260812105959_init` 由 Prisma CLI 根据 schema 生成并已应用。
+- Prisma migration `20260812112007_add_article_schedule_version` 已应用，为排期失效保护增加 `schedule_version`。
+- 数据库包含 26 张 public 表；所有物理列名通过 snake_case 检查。
+- Seed 可重复执行且结果一致：1 个禁用交互登录的 `article-scheduler` 系统身份、3 个系统角色、37 项权限，`SUPER_ADMIN` 拥有全部 37 项权限。
+- 隔离的 `blog_test` 已部署两条迁移；六个真实 PostgreSQL 事务测试覆盖原子提交、失败回滚、同键幂等、同键异请求冲突、并发单写和 NOT_DUE 到期重试。
 
 ## 仍需产品/部署决策
 
