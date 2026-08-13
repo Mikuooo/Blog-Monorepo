@@ -10,6 +10,11 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./dist/index.js"
+    },
+    "./password": {
+      "types": "./src/password.ts",
+      "development": "./src/password.ts",
+      "default": "./dist/password.js"
     }
   },
   "files": [

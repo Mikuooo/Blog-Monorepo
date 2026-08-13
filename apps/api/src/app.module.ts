@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { LoggerModule } from 'nestjs-pino'
 
+import { AuthModule } from './modules/auth/auth.module.js'
 import { InternalSystemModule } from './modules/system/internal-system.module.js'
 import { SystemModule } from './modules/system/system.module.js'
 
@@ -12,6 +13,7 @@ import { SystemModule } from './modules/system/system.module.js'
         redact: ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'],
       },
     }),
+    AuthModule,
     SystemModule,
     InternalSystemModule,
   ],

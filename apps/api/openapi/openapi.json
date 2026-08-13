@@ -1,6 +1,149 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create an administration session",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "success": true
+                  },
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Revoke the current administration session",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/me": {
+      "get": {
+        "operationId": "getCurrentUser",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthUserDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Get the current administration identity",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "getHealth",
@@ -33,7 +176,112 @@
   "tags": [],
   "servers": [],
   "components": {
+    "securitySchemes": {
+      "session": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "blog_session"
+      }
+    },
     "schemas": {
+      "LoginRequestDto": {
+        "type": "object",
+        "properties": {
+          "identifier": {
+            "type": "string",
+            "example": "admin@blog.local",
+            "maxLength": 320,
+            "minLength": 3
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "maxLength": 128,
+            "minLength": 1
+          }
+        },
+        "required": [
+          "identifier",
+          "password"
+        ]
+      },
+      "AuthUserDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "displayName",
+          "email",
+          "id",
+          "permissions",
+          "roles",
+          "username"
+        ]
+      },
+      "LoginResponseDto": {
+        "type": "object",
+        "properties": {
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUserDto"
+          }
+        },
+        "required": [
+          "expiresAt",
+          "user"
+        ]
+      },
+      "AuthErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "INVALID_CREDENTIALS"
+          },
+          "message": {
+            "type": "string",
+            "example": "The supplied credentials are invalid."
+          },
+          "statusCode": {
+            "type": "number",
+            "example": 401
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "statusCode"
+        ]
+      },
       "HealthResponseDto": {
         "type": "object",
         "properties": {

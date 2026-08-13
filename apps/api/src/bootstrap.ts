@@ -5,6 +5,9 @@ import helmet from 'helmet'
 import { Logger } from 'nestjs-pino'
 
 import { AppModule } from './app.module.js'
+import { AuthModule } from './modules/auth/auth.module.js'
+import { sessionCookieName } from './modules/auth/auth-cookie.js'
+import { trustedOrigins } from './modules/auth/guards/trusted-origin.guard.js'
 import { InternalSystemModule } from './modules/system/internal-system.module.js'
 import { SystemModule } from './modules/system/system.module.js'
 
@@ -18,7 +21,7 @@ export async function createApplication(options: CreateApplicationOptions = {}) 
     : await NestFactory.create(AppModule, { bufferLogs: true })
 
   if (!options.disableLogger) app.useLogger(app.get(Logger))
-  app.enableCors()
+  app.enableCors({ credentials: true, origin: [...trustedOrigins()] })
   app.enableShutdownHooks()
   app.setGlobalPrefix('api')
   app.enableVersioning({ defaultVersion: '1', type: VersioningType.URI })
@@ -41,10 +44,11 @@ export function createPublicOpenApiDocument(app: Awaited<ReturnType<typeof NestF
     .setTitle('Blog Platform Public API')
     .setDescription('Public and administration HTTP contract.')
     .setVersion('1.0.0')
+    .addCookieAuth(sessionCookieName(), { type: 'apiKey' }, 'session')
     .build()
   return SwaggerModule.createDocument(app, config, {
     deepScanRoutes: true,
-    include: [SystemModule],
+    include: [SystemModule, AuthModule],
   })
 }
 

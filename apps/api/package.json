@@ -16,6 +16,7 @@
   "dependencies": {
     "@blog/config": "workspace:*",
     "@blog/database": "workspace:*",
+    "@blog/shared": "workspace:*",
     "@nestjs/common": "^11.1.29",
     "@nestjs/core": "^11.1.29",
     "@nestjs/platform-express": "^11.1.29",
