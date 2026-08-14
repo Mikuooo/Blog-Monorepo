@@ -204,7 +204,7 @@ export function DashboardOverviewChart({ data }: { data: ReadonlyArray<Dashboard
   }, [data, range])
 
   return (
-    <Card className="flex h-full min-h-0 flex-col gap-0 py-0">
+    <Card className="flex h-full min-h-0 min-w-0 flex-col gap-0 py-0">
       <CardHeader className="shrink-0 gap-2 px-4 pb-2 pt-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
         <CardTitle>数据总览</CardTitle>
         <div
@@ -233,10 +233,10 @@ export function DashboardOverviewChart({ data }: { data: ReadonlyArray<Dashboard
           })}
         </div>
       </CardHeader>
-      <CardContent className="flex min-h-0 flex-1 px-2 pb-3 sm:px-4">
+      <CardContent className="flex min-h-0 min-w-0 flex-1 px-2 pb-3 sm:px-4">
         <div
           aria-label={`${range === 'week' ? '近七天' : '近一个月'}已发布文章、草稿与待提交、待审核评论及文章阅读量趋势图`}
-          className="min-h-0 w-full flex-1"
+          className="min-h-0 min-w-0 w-full flex-1"
           ref={chartElementRef}
           role="img"
         />

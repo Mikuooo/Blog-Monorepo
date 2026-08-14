@@ -4,7 +4,7 @@ import { Button } from '@blog/ui/components/button'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
-import { useState, useSyncExternalStore } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 
 import { Icon, type IconName } from './icons'
 
@@ -19,7 +19,15 @@ const navigation: Array<{ href: string; icon: IconName; label: string }> = [
   { href: '/settings', icon: 'settings', label: '系统设置' },
 ]
 
+const breadcrumbShadow =
+  'drop-shadow(0 0 0.5px rgb(45 174 165 / 0.55)) drop-shadow(0 2px 3px rgb(15 23 42 / 0.12))'
+
 type LayoutMode = 'inset' | 'classic'
+type NavigationItem = (typeof navigation)[number]
+type BreadcrumbTransition = {
+  item: NavigationItem | undefined
+  phase: 'idle' | 'entering' | 'exiting'
+}
 
 const layoutStorageKey = 'admin-layout-mode'
 const layoutChangeEvent = 'admin-layout-change'
@@ -57,13 +65,55 @@ function subscribeToSidebarChange(onStoreChange: () => void) {
 function SidebarContent({
   close,
   collapsed = false,
+  itemCards = false,
   onToggleCollapse,
 }: {
   close?: () => void
   collapsed?: boolean
+  itemCards?: boolean
   onToggleCollapse?: () => void
 }) {
   const pathname = usePathname()
+
+  function renderNavigationItem(item: NavigationItem) {
+    const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
+    const unavailable = !['/dashboard', '/articles'].includes(item.href)
+
+    return unavailable ? (
+      <span
+        key={item.href}
+        className={`flex min-h-11 items-center rounded-lg text-sm text-muted-foreground/65 ${
+          collapsed ? 'justify-center px-2' : 'gap-3 px-3'
+        } ${itemCards ? 'bg-card/55 ring-1 ring-border/40' : ''}`}
+        title="后续批次开放"
+      >
+        <Icon className="size-5" name={item.icon} />
+        <span className={collapsed ? 'sr-only' : ''}>{item.label}</span>
+        {collapsed ? null : <span className="ml-auto text-[10px] font-semibold">即将开放</span>}
+      </span>
+    ) : (
+      <Link
+        key={item.href}
+        aria-current={active ? 'page' : undefined}
+        className={`flex min-h-11 items-center rounded-lg text-sm font-medium transition-[color,background-color,box-shadow] ${
+          collapsed ? 'justify-center px-2' : 'gap-3 px-3'
+        } ${
+          active
+            ? 'bg-primary text-primary-foreground shadow-sm'
+            : itemCards
+              ? 'bg-card/85 text-muted-foreground shadow-sm ring-1 ring-border/45 hover:bg-primary-soft hover:text-foreground'
+              : 'text-muted-foreground hover:bg-primary-soft hover:text-foreground'
+        }`}
+        href={item.href}
+        title={collapsed ? item.label : undefined}
+        {...(close ? { onClick: close } : {})}
+      >
+        <Icon className="size-5" name={item.icon} />
+        <span className={collapsed ? 'sr-only' : ''}>{item.label}</span>
+      </Link>
+    )
+  }
+
   return (
     <div className="flex h-full flex-col">
       <div
@@ -94,41 +144,19 @@ function SidebarContent({
         ) : null}
       </div>
       <nav
-        className={`flex-1 space-y-1 overflow-y-auto ${collapsed ? 'p-2' : 'p-3'}`}
+        className={`flex-1 overflow-y-auto ${itemCards ? 'space-y-1.5' : 'space-y-1'} ${
+          collapsed ? 'p-2' : 'p-3'
+        }`}
         aria-label="后台主导航"
       >
         <p
-          className={`px-3 pb-2 pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${collapsed ? 'sr-only' : ''}`}
+          className={`px-3 pb-2 pt-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground ${
+            collapsed ? 'sr-only' : ''
+          }`}
         >
           管理菜单
         </p>
-        {navigation.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
-          const unavailable = !['/dashboard', '/articles'].includes(item.href)
-          return unavailable ? (
-            <span
-              key={item.href}
-              className={`flex min-h-11 items-center rounded-lg text-sm text-muted-foreground/65 ${collapsed ? 'justify-center px-2' : 'gap-3 px-3'}`}
-              title="后续批次开放"
-            >
-              <Icon className="size-5" name={item.icon} />
-              <span className={collapsed ? 'sr-only' : ''}>{item.label}</span>
-              {collapsed ? null : <span className="ml-auto text-[10px] font-semibold">即将开放</span>}
-            </span>
-          ) : (
-            <Link
-              key={item.href}
-              aria-current={active ? 'page' : undefined}
-              className={`flex min-h-11 items-center rounded-lg text-sm font-medium transition-colors ${collapsed ? 'justify-center px-2' : 'gap-3 px-3'} ${active ? 'bg-primary text-primary-foreground shadow-sm' : 'text-muted-foreground hover:bg-primary-soft hover:text-foreground'}`}
-              href={item.href}
-              title={collapsed ? item.label : undefined}
-              {...(close ? { onClick: close } : {})}
-            >
-              <Icon className="size-5" name={item.icon} />
-              <span className={collapsed ? 'sr-only' : ''}>{item.label}</span>
-            </Link>
-          )
-        })}
+        {navigation.map(renderNavigationItem)}
       </nav>
       <div className={`border-t ${collapsed ? 'p-2' : 'p-3'}`}>
         <div
@@ -160,6 +188,39 @@ export function AdminShell({ children }: { children: ReactNode }) {
   )
   const inset = layoutMode === 'inset'
   const isDashboard = pathname === '/dashboard'
+  const activeNavigationItem = navigation.find(
+    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`),
+  )
+  const secondaryBreadcrumbItem = isDashboard ? undefined : activeNavigationItem
+  const [breadcrumbTransition, setBreadcrumbTransition] = useState<BreadcrumbTransition>(() => ({
+    item: secondaryBreadcrumbItem,
+    phase: 'idle',
+  }))
+
+  useEffect(() => {
+    if (secondaryBreadcrumbItem?.href === breadcrumbTransition.item?.href) return
+
+    let exitTimer: number | undefined
+    const startTimer = window.setTimeout(() => {
+      if (!breadcrumbTransition.item) {
+        setBreadcrumbTransition({ item: secondaryBreadcrumbItem, phase: 'entering' })
+        return
+      }
+
+      setBreadcrumbTransition((current) => ({ ...current, phase: 'exiting' }))
+      exitTimer = window.setTimeout(() => {
+        setBreadcrumbTransition({
+          item: secondaryBreadcrumbItem,
+          phase: secondaryBreadcrumbItem ? 'entering' : 'idle',
+        })
+      }, 180)
+    }, 0)
+
+    return () => {
+      window.clearTimeout(startTimer)
+      if (exitTimer !== undefined) window.clearTimeout(exitTimer)
+    }
+  }, [secondaryBreadcrumbItem, breadcrumbTransition.item])
 
   function toggleLayout() {
     const nextLayout = inset ? 'classic' : 'inset'
@@ -187,7 +248,11 @@ export function AdminShell({ children }: { children: ReactNode }) {
             : `inset-y-0 left-0 border-r ${sidebarCollapsed ? 'w-16' : 'w-48'}`
         }`}
       >
-        <SidebarContent collapsed={sidebarCollapsed} onToggleCollapse={toggleSidebar} />
+        <SidebarContent
+          collapsed={sidebarCollapsed}
+          itemCards={inset}
+          onToggleCollapse={toggleSidebar}
+        />
       </aside>
       {mobileOpen ? (
         <div className="fixed inset-0 z-40 lg:hidden">
@@ -239,24 +304,78 @@ export function AdminShell({ children }: { children: ReactNode }) {
           >
             <Icon className="size-5" name="menu" />
           </Button>
-          <div className="relative hidden max-w-md flex-1 md:block">
-            <label className="sr-only" htmlFor="global-search">
-              全局搜索
-            </label>
-            <Icon
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-              name="search"
-            />
-            <input
-              className="h-10 w-full rounded-lg border bg-card pl-9 pr-16 text-sm outline-none transition focus:border-ring focus:ring-2 focus:ring-ring/20"
-              id="global-search"
-              placeholder="搜索文章、评论或用户"
-              type="search"
-            />
-            <kbd className="absolute right-3 top-1/2 -translate-y-1/2 rounded border bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
-              ⌘ K
-            </kbd>
-          </div>
+          <nav aria-label="面包屑" className="min-w-0 flex-1">
+            <svg aria-hidden="true" className="absolute size-0" focusable="false">
+              <defs>
+                <clipPath id="breadcrumb-first-shape" clipPathUnits="objectBoundingBox">
+                  <path d="M .031 0 L .844 0 Q .865 0 .88 .05 L .992 .45 Q 1 .5 .992 .55 L .88 .95 Q .865 1 .844 1 L .031 1 Q 0 1 0 .9 L 0 .1 Q 0 0 .031 0 Z" />
+                </clipPath>
+                <clipPath id="breadcrumb-connected-shape" clipPathUnits="objectBoundingBox">
+                  <path d="M .028 0 L .861 0 Q .88 0 .892 .05 L .993 .45 Q 1 .5 .993 .55 L .892 .95 Q .88 1 .861 1 L .028 1 Q .006 1 .012 .95 L .09 .55 Q .1 .5 .09 .45 L .012 .05 Q .006 0 .028 0 Z" />
+                </clipPath>
+              </defs>
+            </svg>
+            <ol className="inline-flex max-w-full items-center py-1 text-sm">
+              <li className="relative z-10 shrink-0">
+                {isDashboard ? (
+                  <span
+                    aria-current="page"
+                    className="inline-flex h-10 min-w-32 items-center gap-2 bg-gradient-to-r from-primary to-primary-hover pl-3 pr-8 font-semibold text-primary-foreground"
+                    style={{
+                      clipPath: 'url(#breadcrumb-first-shape)',
+                      filter: breadcrumbShadow,
+                    }}
+                  >
+                    <span className="grid size-6 place-items-center rounded-full bg-background/25 shadow-sm">
+                      <Icon className="size-3.5" name="dashboard" />
+                    </span>
+                    工作台
+                  </span>
+                ) : (
+                  <Link
+                    className="inline-flex h-10 min-w-32 items-center gap-2 bg-gradient-to-r from-card to-muted pl-3 pr-8 font-medium text-muted-foreground transition-colors hover:from-primary-soft hover:to-primary-soft hover:text-primary-hover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    href="/dashboard"
+                    style={{
+                      clipPath: 'url(#breadcrumb-first-shape)',
+                      filter: breadcrumbShadow,
+                    }}
+                  >
+                    <span className="grid size-6 place-items-center rounded-full bg-card shadow-sm">
+                      <Icon className="size-3.5" name="dashboard" />
+                    </span>
+                    工作台
+                  </Link>
+                )}
+              </li>
+              {breadcrumbTransition.item ? (
+                <li
+                  className={`relative z-20 -ml-3.5 min-w-0 ${
+                    breadcrumbTransition.phase === 'entering'
+                      ? 'breadcrumb-slide-in'
+                      : breadcrumbTransition.phase === 'exiting'
+                        ? 'breadcrumb-slide-out'
+                        : ''
+                  }`}
+                  key={breadcrumbTransition.item.href}
+                >
+                  <span
+                    aria-current="page"
+                    className="inline-flex h-10 min-w-36 max-w-64 items-center gap-2 truncate bg-gradient-to-r from-primary to-primary-hover py-0 pl-8 pr-8 font-semibold text-primary-foreground"
+                    style={{
+                      clipPath: 'url(#breadcrumb-connected-shape)',
+                      filter: breadcrumbShadow,
+                    }}
+                  >
+                    <span
+                      aria-hidden="true"
+                      className="size-1.5 shrink-0 rounded-full bg-primary-foreground/70"
+                    />
+                    {breadcrumbTransition.item.label}
+                  </span>
+                </li>
+              ) : null}
+            </ol>
+          </nav>
           <div className="ml-auto flex items-center gap-2">
             <Button
               aria-label={inset ? '切换为全宽经典布局' : '切换为内嵌圆角布局'}

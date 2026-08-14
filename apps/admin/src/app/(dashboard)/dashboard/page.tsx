@@ -54,7 +54,7 @@ const dashboardTrend: ReadonlyArray<DashboardTrendPoint> = [
 
 export default function DashboardPage() {
   return (
-    <div className="grid h-[calc(100dvh-7rem)] grid-rows-[18rem_minmax(0,1fr)] gap-4">
+    <div className="grid h-[calc(100dvh-7rem)] min-w-0 grid-rows-[18rem_minmax(0,1fr)] gap-4">
       <section
         aria-label="工作台摘要"
         className="grid min-h-0 grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,1fr)] gap-4"
@@ -75,7 +75,7 @@ export default function DashboardPage() {
         <DashboardTaskSwitcher />
         <Card className="h-full min-h-0 min-w-0 py-0" aria-label="预留区域" />
       </section>
-      <section className="min-h-0" aria-label="数据总览">
+      <section className="min-h-0 min-w-0" aria-label="数据总览">
         <DashboardOverviewChart data={dashboardTrend} />
       </section>
     </div>
