@@ -150,6 +150,7 @@ function SidebarContent({
 }
 
 export function AdminShell({ children }: { children: ReactNode }) {
+  const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
   const layoutMode = useSyncExternalStore(subscribeToLayoutChange, getLayoutSnapshot, () => 'inset')
   const sidebarCollapsed = useSyncExternalStore(
@@ -158,6 +159,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
     () => false,
   )
   const inset = layoutMode === 'inset'
+  const isDashboard = pathname === '/dashboard'
 
   function toggleLayout() {
     const nextLayout = inset ? 'classic' : 'inset'
@@ -279,9 +281,13 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </div>
         </header>
         <main
-          className={`mx-auto max-w-[1600px] ${
-            inset ? 'px-1 pb-5 pt-7 sm:px-2 sm:pb-6 sm:pt-8 lg:px-4' : 'p-4 sm:p-6 lg:p-8'
-          }`}
+          className={
+            isDashboard
+              ? 'w-full max-w-none pt-4'
+              : `mx-auto max-w-[1600px] ${
+                  inset ? 'px-1 pb-5 pt-7 sm:px-2 sm:pb-6 sm:pt-8 lg:px-4' : 'p-4 sm:p-6 lg:p-8'
+                }`
+          }
           id="main-content"
         >
           {children}
