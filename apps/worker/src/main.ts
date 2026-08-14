@@ -2,7 +2,7 @@ import './environment.js'
 
 import { createServer } from 'node:http'
 
-import { Worker } from 'bullmq'
+import { Queue, Worker } from 'bullmq'
 import type { Job } from 'bullmq'
 import pino from 'pino'
 
@@ -13,6 +13,7 @@ import { loadWorkerConfiguration } from './config.js'
 import { createWorkloadTokenProvider } from './internal-api/workload-token.js'
 import { validateHeartbeatJob, type HeartbeatJobV1 } from './jobs/heartbeat.job.js'
 import { processScheduledArticlePublication } from './jobs/scheduled-article-publication.job.js'
+import { createScheduledPublicationDispatcher } from './jobs/scheduled-publication-dispatcher.js'
 import { createRedisConnectionOptions } from './redis-connection.js'
 
 const configuration = loadWorkerConfiguration()
@@ -28,6 +29,41 @@ const internalApiClient = createInternalApiClient({
     subject: configuration.internalApiSubject,
   }),
 })
+const articleCommandQueue = new Queue(QUEUE_NAMES.articleCommands, {
+  connection: createRedisConnectionOptions(configuration.redisUrl),
+})
+const scheduledPublicationDispatcher = createScheduledPublicationDispatcher(
+  configuration.databaseUrl,
+  articleCommandQueue,
+  {
+    batchSize: configuration.outboxBatchSize,
+    leaseDurationMs: configuration.outboxLeaseDurationMs,
+    retryDelayMs: configuration.outboxRetryDelayMs,
+  },
+)
+let dispatchingOutbox = false
+
+async function dispatchScheduledPublications(): Promise<void> {
+  if (dispatchingOutbox || shuttingDown) return
+  dispatchingOutbox = true
+  try {
+    const count = await scheduledPublicationDispatcher.dispatchDue()
+    if (count > 0) {
+      logger.info({ count }, 'Scheduled publication jobs enqueued')
+    }
+  } catch (error) {
+    logger.error({ error }, 'Scheduled publication outbox dispatch failed')
+  } finally {
+    dispatchingOutbox = false
+  }
+}
+
+const outboxDispatchTimer = setInterval(
+  () => void dispatchScheduledPublications(),
+  configuration.outboxDispatchIntervalMs,
+)
+outboxDispatchTimer.unref()
+void dispatchScheduledPublications()
 
 const maintenanceWorker = new Worker<HeartbeatJobV1, void>(
   QUEUE_NAMES.maintenance,
@@ -107,7 +143,10 @@ async function shutdown(signal: NodeJS.Signals): Promise<void> {
   shuttingDown = true
   readyWorkers.clear()
   logger.info({ signal }, 'Worker shutdown started')
+  clearInterval(outboxDispatchTimer)
   await Promise.all(workers.map((worker) => worker.close()))
+  await articleCommandQueue.close()
+  await scheduledPublicationDispatcher.close()
   await new Promise<void>((resolve, reject) => {
     healthServer.close((error) => (error ? reject(error) : resolve()))
   })

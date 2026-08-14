@@ -290,6 +290,9 @@ importers:
       '@blog/constants':
         specifier: workspace:*
         version: link:../../packages/constants
+      '@blog/database':
+        specifier: workspace:*
+        version: link:../../packages/database
       '@blog/event-contracts':
         specifier: workspace:*
         version: link:../../packages/event-contracts

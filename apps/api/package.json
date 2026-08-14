@@ -11,7 +11,7 @@
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run --exclude=dist/**",
-    "test:integration": "vitest run --config vitest.integration.config.ts test/article-publication.integration.spec.ts test/internal-article-publication.e2e.spec.ts test/auth.e2e.spec.ts test/admin-articles.e2e.spec.ts",
+    "test:integration": "vitest run --config vitest.integration.config.ts test/article-publication.integration.spec.ts test/internal-article-publication.e2e.spec.ts test/auth.e2e.spec.ts test/admin-articles.e2e.spec.ts test/admin-article-commands.e2e.spec.ts",
     "test:coverage": "vitest run --coverage --exclude=dist/**",
     "preopenapi:generate": "pnpm --filter @blog/database prisma:generate",
     "openapi:generate": "node --import tsx --conditions=development src/openapi.ts"

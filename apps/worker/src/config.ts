@@ -2,12 +2,17 @@ import { getRequiredEnvironmentVariable } from '@blog/config'
 
 export type WorkerConfiguration = {
   concurrency: number
+  databaseUrl: string
   healthPort: number
   internalApiAudience: string
   internalApiBaseUrl: string
   internalApiIssuer: string
   internalApiSecret: string
   internalApiSubject: string
+  outboxBatchSize: number
+  outboxDispatchIntervalMs: number
+  outboxLeaseDurationMs: number
+  outboxRetryDelayMs: number
   redisUrl: string
 }
 
@@ -45,12 +50,29 @@ export function loadWorkerConfiguration(
 
   return {
     concurrency: positiveInteger(environment.WORKER_CONCURRENCY, 4, 'WORKER_CONCURRENCY'),
+    databaseUrl: getRequiredEnvironmentVariable('DATABASE_URL', environment),
     healthPort: positiveInteger(environment.WORKER_HEALTH_PORT, 3003, 'WORKER_HEALTH_PORT'),
     internalApiAudience: getRequiredEnvironmentVariable('INTERNAL_WORKLOAD_AUDIENCE', environment),
     internalApiBaseUrl,
     internalApiIssuer: getRequiredEnvironmentVariable('INTERNAL_WORKLOAD_ISSUER', environment),
     internalApiSecret,
     internalApiSubject: getRequiredEnvironmentVariable('INTERNAL_WORKLOAD_SUBJECT', environment),
+    outboxBatchSize: positiveInteger(environment.OUTBOX_BATCH_SIZE, 50, 'OUTBOX_BATCH_SIZE'),
+    outboxDispatchIntervalMs: positiveInteger(
+      environment.OUTBOX_DISPATCH_INTERVAL_MS,
+      5_000,
+      'OUTBOX_DISPATCH_INTERVAL_MS',
+    ),
+    outboxLeaseDurationMs: positiveInteger(
+      environment.OUTBOX_LEASE_DURATION_MS,
+      30_000,
+      'OUTBOX_LEASE_DURATION_MS',
+    ),
+    outboxRetryDelayMs: positiveInteger(
+      environment.OUTBOX_RETRY_DELAY_MS,
+      5_000,
+      'OUTBOX_RETRY_DELAY_MS',
+    ),
     redisUrl,
   }
 }

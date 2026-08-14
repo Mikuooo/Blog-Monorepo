@@ -4,6 +4,7 @@ import { loadWorkerConfiguration } from '../src/config.js'
 
 describe('loadWorkerConfiguration', () => {
   const required = {
+    DATABASE_URL: 'postgresql://blog:blog@localhost:5432/blog_test',
     INTERNAL_API_BASE_URL: 'http://localhost:3001',
     INTERNAL_WORKLOAD_AUDIENCE: 'blog-api-internal',
     INTERNAL_WORKLOAD_ISSUER: 'blog-worker',
@@ -15,12 +16,17 @@ describe('loadWorkerConfiguration', () => {
   it('loads bounded defaults', () => {
     expect(loadWorkerConfiguration(required)).toEqual({
       concurrency: 4,
+      databaseUrl: 'postgresql://blog:blog@localhost:5432/blog_test',
       healthPort: 3003,
       internalApiAudience: 'blog-api-internal',
       internalApiBaseUrl: 'http://localhost:3001',
       internalApiIssuer: 'blog-worker',
       internalApiSecret: 'a-secure-test-secret-with-32-bytes',
       internalApiSubject: 'apps/worker',
+      outboxBatchSize: 50,
+      outboxDispatchIntervalMs: 5000,
+      outboxLeaseDurationMs: 30000,
+      outboxRetryDelayMs: 5000,
       redisUrl: 'redis://localhost:6379',
     })
   })

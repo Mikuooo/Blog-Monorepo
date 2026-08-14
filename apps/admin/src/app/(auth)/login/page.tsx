@@ -1,4 +1,3 @@
-import { Badge } from '@blog/ui/components/badge'
 import { Button } from '@blog/ui/components/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@blog/ui/components/card'
 import { Input } from '@blog/ui/components/input'
@@ -32,10 +31,7 @@ export default function LoginPage() {
               </div>
               <span className="font-semibold text-foreground">Blog Platform</span>
             </div>
-            <Badge className="mb-4 w-fit" variant="warning">
-              界面演示模式
-            </Badge>
-            <CardTitle className="text-3xl">欢迎回来</CardTitle>
+            <CardTitle className="text-3xl">欢迎来到梦世界</CardTitle>
             <CardDescription>登录后进入内容管理工作台。本批尚未接入真实认证接口。</CardDescription>
           </CardHeader>
           <CardContent>
@@ -58,7 +54,6 @@ export default function LoginPage() {
                   <label className="text-sm font-semibold" htmlFor="password">
                     密码
                   </label>
-                  <span className="text-xs text-muted-foreground">认证功能下一批接入</span>
                 </div>
                 <Input
                   autoComplete="current-password"
@@ -72,9 +67,6 @@ export default function LoginPage() {
                 进入演示工作台 <Icon className="size-4" name="arrow-up-right" />
               </Button>
             </form>
-            <p className="mt-6 text-center text-xs leading-5 text-muted-foreground">
-              继续即表示你已获授权访问管理后台。真实环境将由服务端验证身份与权限。
-            </p>
           </CardContent>
         </Card>
       </section>

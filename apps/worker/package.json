@@ -15,6 +15,7 @@
   "dependencies": {
     "@blog/config": "workspace:*",
     "@blog/constants": "workspace:*",
+    "@blog/database": "workspace:*",
     "@blog/event-contracts": "workspace:*",
     "@blog/internal-api-client": "workspace:*",
     "@blog/shared": "workspace:*",

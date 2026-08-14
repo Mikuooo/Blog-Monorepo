@@ -65,7 +65,8 @@ export interface paths {
         /** List administration articles */
         get: operations["listAdminArticles"];
         put?: never;
-        post?: never;
+        /** Create an article draft */
+        post: operations["createAdminArticle"];
         delete?: never;
         options?: never;
         head?: never;
@@ -83,6 +84,75 @@ export interface paths {
         get: operations["getAdminArticle"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update an article */
+        patch: operations["updateAdminArticle"];
+        trace?: never;
+    };
+    "/api/v1/admin/articles/{articleId}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Publish an article immediately */
+        post: operations["publishAdminArticle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/articles/{articleId}/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Schedule article publication */
+        post: operations["scheduleAdminArticle"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/articles/{articleId}/cancel-schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel publication scheduling */
+        post: operations["cancelAdminArticleSchedule"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/articles/{articleId}/archive": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Archive an article */
+        post: operations["archiveAdminArticle"];
         delete?: never;
         options?: never;
         head?: never;
@@ -150,6 +220,57 @@ export interface components {
             /** @enum {string} */
             status?: "ARCHIVED" | "DRAFT" | "PUBLISHED" | "SCHEDULED";
         };
+        CreateAdminArticleDto: {
+            /** @default true */
+            allowComment: boolean;
+            canonicalUrl?: string | null;
+            /** Format: uuid */
+            categoryId?: string | null;
+            content: string;
+            /** Format: uuid */
+            coverId?: string | null;
+            /** @default false */
+            isFeatured: boolean;
+            /** @default false */
+            isPinned: boolean;
+            /** @description Required when visibility is PASSWORD. */
+            password?: string;
+            seoDescription?: string | null;
+            seoTitle?: string | null;
+            /** @example transaction-boundaries */
+            slug: string;
+            summary?: string | null;
+            tagIds?: string[];
+            title: string;
+            /**
+             * @default PUBLIC
+             * @enum {string}
+             */
+            visibility: "PASSWORD" | "PRIVATE" | "PUBLIC";
+        };
+        AdminArticleCommandResponseDto: {
+            /** Format: uuid */
+            articleId: string;
+            passwordProtected: boolean;
+            /** Format: date-time */
+            publishedAt: string | null;
+            /** Format: uuid */
+            revisionId?: string;
+            /** Format: date-time */
+            scheduledAt: string | null;
+            scheduleVersion: number;
+            /** @enum {string} */
+            status: "ARCHIVED" | "DRAFT" | "PUBLISHED" | "SCHEDULED";
+            version: number;
+        };
+        AdminArticleErrorResponseDto: {
+            /** @example ARTICLE_NOT_FOUND */
+            code: string;
+            /** @example The requested article was not found. */
+            message: string;
+            /** @example 404 */
+            statusCode: number;
+        };
         ArticleAuthorSummaryDto: {
             displayName: string;
             /** Format: uuid */
@@ -190,14 +311,6 @@ export interface components {
             pageSize: number;
             total: number;
             totalPages: number;
-        };
-        AdminArticleErrorResponseDto: {
-            /** @example ARTICLE_NOT_FOUND */
-            code: string;
-            /** @example The requested article was not found. */
-            message: string;
-            /** @example 404 */
-            statusCode: number;
         };
         ArticleCoverDto: {
             height: number | null;
@@ -252,6 +365,36 @@ export interface components {
             tags: components["schemas"]["ArticleTagSummaryDto"][];
             version: number;
             wordCount: number;
+        };
+        UpdateAdminArticleDto: {
+            allowComment?: boolean;
+            canonicalUrl?: string | null;
+            /** Format: uuid */
+            categoryId?: string | null;
+            clearPassword?: boolean;
+            content?: string;
+            /** Format: uuid */
+            coverId?: string | null;
+            expectedVersion: number;
+            isFeatured?: boolean;
+            isPinned?: boolean;
+            password?: string;
+            seoDescription?: string | null;
+            seoTitle?: string | null;
+            slug?: string;
+            summary?: string | null;
+            tagIds?: string[];
+            title?: string;
+            /** @enum {string} */
+            visibility?: "PASSWORD" | "PRIVATE" | "PUBLIC";
+        };
+        AdminArticleVersionCommandDto: {
+            expectedVersion: number;
+        };
+        ScheduleAdminArticleDto: {
+            expectedVersion: number;
+            /** Format: date-time */
+            scheduledAt: string;
         };
         HealthResponseDto: {
             /**
@@ -420,6 +563,61 @@ export interface operations {
             };
         };
     };
+    createAdminArticle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateAdminArticleDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleCommandResponseDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+        };
+    };
     getAdminArticle: {
         parameters: {
             query?: never;
@@ -462,6 +660,331 @@ export interface operations {
                 };
             };
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+        };
+    };
+    updateAdminArticle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                articleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateAdminArticleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleCommandResponseDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+        };
+    };
+    publishAdminArticle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                articleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminArticleVersionCommandDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleCommandResponseDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+        };
+    };
+    scheduleAdminArticle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                articleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduleAdminArticleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleCommandResponseDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+        };
+    };
+    cancelAdminArticleSchedule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                articleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminArticleVersionCommandDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleCommandResponseDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+        };
+    };
+    archiveAdminArticle: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                articleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminArticleVersionCommandDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleCommandResponseDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

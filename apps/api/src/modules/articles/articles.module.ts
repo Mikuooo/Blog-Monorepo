@@ -2,11 +2,14 @@ import { Module } from '@nestjs/common'
 
 import { PrismaInfrastructureModule } from '../../infrastructure/prisma/prisma-infrastructure.module.js'
 import { AuthModule } from '../auth/auth.module.js'
+import { ADMIN_ARTICLE_COMMAND_REPOSITORY } from './application/admin-article-command.contract.js'
+import { AdminArticleCommandService } from './application/admin-article-command.service.js'
 import { ARTICLE_PUBLICATION_UNIT_OF_WORK } from './application/article-publication.contract.js'
 import { ARTICLE_QUERY_REPOSITORY } from './application/article-query.contract.js'
 import { AdminArticleQueryService } from './application/admin-article-query.service.js'
 import { ArticlesService } from './application/articles.service.js'
 import { AdminArticlesController } from './controllers/admin-articles.controller.js'
+import { PrismaAdminArticleCommandRepository } from './infrastructure/persistence/prisma-admin-article-command.repository.js'
 import { PrismaArticlePublicationUnitOfWork } from './infrastructure/persistence/prisma-article-publication.unit-of-work.js'
 import { PrismaArticleQueryRepository } from './infrastructure/persistence/prisma-article-query.repository.js'
 
@@ -15,8 +18,13 @@ import { PrismaArticleQueryRepository } from './infrastructure/persistence/prism
   exports: [AdminArticleQueryService, ArticlesService],
   imports: [AuthModule, PrismaInfrastructureModule],
   providers: [
+    AdminArticleCommandService,
     AdminArticleQueryService,
     ArticlesService,
+    {
+      provide: ADMIN_ARTICLE_COMMAND_REPOSITORY,
+      useClass: PrismaAdminArticleCommandRepository,
+    },
     {
       provide: ARTICLE_QUERY_REPOSITORY,
       useClass: PrismaArticleQueryRepository,

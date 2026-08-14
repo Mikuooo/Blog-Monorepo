@@ -50,6 +50,29 @@ export const articlePublishedEventV1Schema = integrationEventEnvelopeV1Schema.ex
 
 export type ArticlePublishedEventV1 = z.infer<typeof articlePublishedEventV1Schema>
 
+export const articlePublicationScheduledEventV1Schema = integrationEventEnvelopeV1Schema.extend({
+  aggregate: z
+    .object({
+      id: z.uuid(),
+      sequence: z.number().int().positive(),
+      type: z.literal('article'),
+    })
+    .strict(),
+  data: z
+    .object({
+      articleId: z.uuid(),
+      scheduleVersion: z.number().int().positive(),
+      scheduledAt: z.iso.datetime({ offset: true }),
+    })
+    .strict(),
+  eventName: z.literal('article.publication-scheduled'),
+  eventVersion: z.literal(1),
+})
+
+export type ArticlePublicationScheduledEventV1 = z.infer<
+  typeof articlePublicationScheduledEventV1Schema
+>
+
 export const outboxDeliveryJobV1Schema = z
   .object({
     correlationId: z.string().min(1).optional(),
