@@ -1,6 +1,7 @@
 import { getRequiredEnvironmentVariable } from '@blog/config'
 
 export type WorkerConfiguration = {
+  bullmqPrefix: string
   concurrency: number
   databaseUrl: string
   healthPort: number
@@ -28,10 +29,14 @@ function positiveInteger(value: string | undefined, fallback: number, name: stri
 export function loadWorkerConfiguration(
   environment: Readonly<Record<string, string | undefined>> = process.env,
 ): WorkerConfiguration {
-  const redisUrl = getRequiredEnvironmentVariable('REDIS_URL', environment)
+  const redisUrl = getRequiredEnvironmentVariable('REDIS_WORKER_URL', environment)
   const protocol = new URL(redisUrl).protocol
   if (protocol !== 'redis:' && protocol !== 'rediss:') {
-    throw new Error('REDIS_URL must use redis:// or rediss://')
+    throw new Error('REDIS_WORKER_URL must use redis:// or rediss://')
+  }
+  const bullmqPrefix = getRequiredEnvironmentVariable('BULLMQ_PREFIX', environment)
+  if (!/^bull:[a-z0-9_-]+$/u.test(bullmqPrefix)) {
+    throw new Error('BULLMQ_PREFIX must match bull:<environment>')
   }
 
   const internalApiBaseUrl = getRequiredEnvironmentVariable('INTERNAL_API_BASE_URL', environment)
@@ -49,6 +54,7 @@ export function loadWorkerConfiguration(
   }
 
   return {
+    bullmqPrefix,
     concurrency: positiveInteger(environment.WORKER_CONCURRENCY, 4, 'WORKER_CONCURRENCY'),
     databaseUrl: getRequiredEnvironmentVariable('DATABASE_URL', environment),
     healthPort: positiveInteger(environment.WORKER_HEALTH_PORT, 3003, 'WORKER_HEALTH_PORT'),

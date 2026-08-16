@@ -71,6 +71,9 @@ importers:
       '@blog/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
+      '@blog/api-types':
+        specifier: workspace:*
+        version: link:../../packages/api-types
       '@blog/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas

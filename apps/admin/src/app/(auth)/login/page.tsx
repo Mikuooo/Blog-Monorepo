@@ -1,10 +1,9 @@
-import { Button } from '@blog/ui/components/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@blog/ui/components/card'
-import { Input } from '@blog/ui/components/input'
 import type { Metadata } from 'next'
+import { Suspense } from 'react'
 
 import { RainEffect } from '@/components/effects/rain'
-import { Icon } from '@/components/icons'
+import { LoginForm } from '@/features/auth/login-form'
 
 export const metadata: Metadata = { title: '登录' }
 
@@ -32,41 +31,16 @@ export default function LoginPage() {
               <span className="font-semibold text-foreground">Blog Platform</span>
             </div>
             <CardTitle className="text-3xl">欢迎来到梦世界</CardTitle>
-            <CardDescription>登录后进入内容管理工作台。本批尚未接入真实认证接口。</CardDescription>
+            <CardDescription>使用管理员账号登录内容管理工作台。</CardDescription>
           </CardHeader>
           <CardContent>
-            <form action="/dashboard" className="space-y-5" method="get">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold" htmlFor="email">
-                  邮箱地址
-                </label>
-                <Input
-                  autoComplete="email"
-                  defaultValue="admin@blog.local"
-                  id="email"
-                  name="email"
-                  required
-                  type="email"
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-semibold" htmlFor="password">
-                    密码
-                  </label>
-                </div>
-                <Input
-                  autoComplete="current-password"
-                  id="password"
-                  placeholder="输入任意演示密码"
-                  required
-                  type="password"
-                />
-              </div>
-              <Button className="w-full" type="submit">
-                进入演示工作台 <Icon className="size-4" name="arrow-up-right" />
-              </Button>
-            </form>
+            <Suspense
+              fallback={
+                <p className="py-3 text-center text-sm text-muted-foreground">正在准备登录…</p>
+              }
+            >
+              <LoginForm />
+            </Suspense>
           </CardContent>
         </Card>
       </section>

@@ -31,6 +31,7 @@ const internalApiClient = createInternalApiClient({
 })
 const articleCommandQueue = new Queue(QUEUE_NAMES.articleCommands, {
   connection: createRedisConnectionOptions(configuration.redisUrl),
+  prefix: configuration.bullmqPrefix,
 })
 const scheduledPublicationDispatcher = createScheduledPublicationDispatcher(
   configuration.databaseUrl,
@@ -77,6 +78,7 @@ const maintenanceWorker = new Worker<HeartbeatJobV1, void>(
   {
     concurrency: configuration.concurrency,
     connection: createRedisConnectionOptions(configuration.redisUrl),
+    prefix: configuration.bullmqPrefix,
   },
 )
 
@@ -91,6 +93,7 @@ const articleCommandWorker = new Worker(
   {
     concurrency: configuration.concurrency,
     connection: createRedisConnectionOptions(configuration.redisUrl),
+    prefix: configuration.bullmqPrefix,
   },
 )
 

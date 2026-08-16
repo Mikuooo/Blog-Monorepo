@@ -6,6 +6,9 @@ import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { useEffect, useState, useSyncExternalStore } from 'react'
 
+import { LogoutButton } from '@/features/auth/logout-button'
+import { useCurrentUser } from '@/features/auth/auth-query'
+
 import { Icon, type IconName } from './icons'
 
 const navigation: Array<{ href: string; icon: IconName; label: string }> = [
@@ -74,6 +77,9 @@ function SidebarContent({
   onToggleCollapse?: () => void
 }) {
   const pathname = usePathname()
+  const currentUser = useCurrentUser()
+  const displayName = currentUser.data?.displayName || '内容管理员'
+  const email = currentUser.data?.email || 'admin@blog.local'
 
   function renderNavigationItem(item: NavigationItem) {
     const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
@@ -160,17 +166,17 @@ function SidebarContent({
       </nav>
       <div className={`border-t ${collapsed ? 'p-2' : 'p-3'}`}>
         <div
-          className={`flex items-center rounded-xl bg-muted/70 ${collapsed ? 'justify-center p-2' : 'gap-3 p-3'}`}
-          title={collapsed ? '内容管理员' : undefined}
+          className={`flex items-center rounded-xl bg-muted/70 ${collapsed ? 'flex-col justify-center gap-1 p-2' : 'gap-3 p-3'}`}
+          title={collapsed ? displayName : undefined}
         >
           <div className="grid size-9 place-items-center rounded-full bg-card text-primary-hover shadow-sm">
             <Icon className="size-5" name="user" />
           </div>
           <div className={collapsed ? 'sr-only' : 'min-w-0 flex-1'}>
-            <p className="truncate text-sm font-semibold">内容管理员</p>
-            <p className="truncate text-xs text-muted-foreground">admin@blog.local</p>
+            <p className="truncate text-sm font-semibold">{displayName}</p>
+            <p className="truncate text-xs text-muted-foreground">{email}</p>
           </div>
-          {collapsed ? null : <Icon className="size-4 text-muted-foreground" name="chevron-down" />}
+          <LogoutButton className="shrink-0" />
         </div>
       </div>
     </div>
@@ -179,6 +185,10 @@ function SidebarContent({
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = usePathname()
+  const currentUser = useCurrentUser()
+  const displayName = currentUser.data?.displayName || '内容管理员'
+  const roleLabel = currentUser.data?.roles.join(' · ') || 'Administrator'
+  const avatarLabel = displayName.slice(0, 1) || '管'
   const [mobileOpen, setMobileOpen] = useState(false)
   const layoutMode = useSyncExternalStore(subscribeToLayoutChange, getLayoutSnapshot, () => 'inset')
   const sidebarCollapsed = useSyncExternalStore(
@@ -389,13 +399,14 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <Button aria-label="查看通知" size="icon" variant="ghost">
               <Icon className="size-5" name="bell" />
             </Button>
+            <LogoutButton />
             <div className="hidden h-8 w-px bg-border sm:block" />
             <div className="hidden text-right sm:block">
-              <p className="text-sm font-semibold">内容管理员</p>
-              <p className="text-xs text-muted-foreground">Administrator</p>
+              <p className="text-sm font-semibold">{displayName}</p>
+              <p className="text-xs text-muted-foreground">{roleLabel}</p>
             </div>
             <div className="grid size-9 place-items-center rounded-full bg-primary text-sm font-black text-primary-foreground">
-              管
+              {avatarLabel}
             </div>
           </div>
         </header>

@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common'
 
-import { PrismaService } from '../../../../infrastructure/prisma/prisma.service.js'
+import { ReadonlyPrismaService } from '../../../../infrastructure/prisma/readonly-prisma.service.js'
 import type {
   AdminArticleDetail,
   AdminArticleListItem,
@@ -11,7 +11,7 @@ import type {
 
 @Injectable()
 export class PrismaArticleQueryRepository implements ArticleQueryRepository {
-  constructor(@Inject(PrismaService) private readonly prisma: PrismaService) {}
+  constructor(@Inject(ReadonlyPrismaService) private readonly prisma: ReadonlyPrismaService) {}
 
   async findAdminArticles(query: AdminArticleListQuery): Promise<AdminArticleListResult> {
     const keyword = query.keyword?.trim()
