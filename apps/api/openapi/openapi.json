@@ -1449,6 +1449,118 @@
         ]
       }
     },
+    "/api/v1/admin/settings": {
+      "get": {
+        "operationId": "getAdminSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemSettingsResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Get system settings",
+        "tags": [
+          "admin-settings"
+        ]
+      },
+      "put": {
+        "operationId": "updateAdminSettings",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSystemSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemSettingsResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Update system settings",
+        "tags": [
+          "admin-settings"
+        ]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "getHealth",
@@ -3067,6 +3179,155 @@
         "required": [
           "expectedVersion",
           "scheduledAt"
+        ]
+      },
+      "BasicSettingsDto": {
+        "type": "object",
+        "properties": {
+          "faviconUrl": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "logoUrl": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "siteDescription": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "siteName": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 1
+          },
+          "siteUrl": {
+            "type": "string",
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "faviconUrl",
+          "logoUrl",
+          "siteDescription",
+          "siteName",
+          "siteUrl"
+        ]
+      },
+      "ContentSettingsDto": {
+        "type": "object",
+        "properties": {
+          "articlesPerPage": {
+            "type": "number",
+            "maximum": 100,
+            "minimum": 10
+          },
+          "commentsEnabled": {
+            "type": "boolean"
+          },
+          "defaultArticleStatus": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "PUBLISHED"
+            ]
+          }
+        },
+        "required": [
+          "articlesPerPage",
+          "commentsEnabled",
+          "defaultArticleStatus"
+        ]
+      },
+      "SeoSettingsDto": {
+        "type": "object",
+        "properties": {
+          "defaultDescription": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "defaultTitle": {
+            "type": "string",
+            "maxLength": 240
+          },
+          "keywords": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "defaultDescription",
+          "defaultTitle",
+          "keywords"
+        ]
+      },
+      "SystemSettingsResponseDto": {
+        "type": "object",
+        "properties": {
+          "basic": {
+            "$ref": "#/components/schemas/BasicSettingsDto"
+          },
+          "content": {
+            "$ref": "#/components/schemas/ContentSettingsDto"
+          },
+          "seo": {
+            "$ref": "#/components/schemas/SeoSettingsDto"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "basic",
+          "content",
+          "seo",
+          "updatedAt"
+        ]
+      },
+      "SettingsErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "PERMISSION_DENIED"
+          },
+          "message": {
+            "type": "string",
+            "example": "The required permission was not granted."
+          },
+          "statusCode": {
+            "type": "number",
+            "example": 403
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "statusCode"
+        ]
+      },
+      "UpdateSystemSettingsDto": {
+        "type": "object",
+        "properties": {
+          "basic": {
+            "$ref": "#/components/schemas/BasicSettingsDto"
+          },
+          "content": {
+            "$ref": "#/components/schemas/ContentSettingsDto"
+          },
+          "seo": {
+            "$ref": "#/components/schemas/SeoSettingsDto"
+          }
+        },
+        "required": [
+          "basic",
+          "content",
+          "seo"
         ]
       },
       "HealthResponseDto": {

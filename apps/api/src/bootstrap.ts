@@ -11,6 +11,7 @@ import { InternalArticlesModule } from './modules/articles/internal-articles.mod
 import { AuthModule } from './modules/auth/auth.module.js'
 import { sessionCookieName } from './modules/auth/auth-cookie.js'
 import { trustedOrigins } from './modules/auth/guards/trusted-origin.guard.js'
+import { SettingsModule } from './modules/settings/settings.module.js'
 import { InternalSystemModule } from './modules/system/internal-system.module.js'
 import { SystemModule } from './modules/system/system.module.js'
 import { TaxonomiesModule } from './modules/taxonomies/taxonomies.module.js'
@@ -52,7 +53,14 @@ export function createPublicOpenApiDocument(app: Awaited<ReturnType<typeof NestF
     .build()
   return SwaggerModule.createDocument(app, config, {
     deepScanRoutes: true,
-    include: [SystemModule, AuthModule, ArticlesModule, TaxonomiesModule, AccessControlModule],
+    include: [
+      SystemModule,
+      AuthModule,
+      ArticlesModule,
+      TaxonomiesModule,
+      AccessControlModule,
+      SettingsModule,
+    ],
   })
 }
 

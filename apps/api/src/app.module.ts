@@ -6,6 +6,7 @@ import { AccessControlModule } from './modules/access-control/access-control.mod
 import { AuthModule } from './modules/auth/auth.module.js'
 import { ArticlesModule } from './modules/articles/articles.module.js'
 import { InternalArticlesModule } from './modules/articles/internal-articles.module.js'
+import { SettingsModule } from './modules/settings/settings.module.js'
 import { InternalSystemModule } from './modules/system/internal-system.module.js'
 import { SystemModule } from './modules/system/system.module.js'
 import { TaxonomiesModule } from './modules/taxonomies/taxonomies.module.js'
@@ -23,6 +24,7 @@ import { TaxonomiesModule } from './modules/taxonomies/taxonomies.module.js'
     AuthModule,
     ArticlesModule,
     InternalArticlesModule,
+    SettingsModule,
     SystemModule,
     InternalSystemModule,
     TaxonomiesModule,

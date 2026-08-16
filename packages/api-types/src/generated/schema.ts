@@ -263,6 +263,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get system settings */
+        get: operations["getAdminSettings"];
+        /** Update system settings */
+        put: operations["updateAdminSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -657,6 +675,44 @@ export interface components {
             expectedVersion: number;
             /** Format: date-time */
             scheduledAt: string;
+        };
+        BasicSettingsDto: {
+            faviconUrl: string;
+            logoUrl: string;
+            siteDescription: string;
+            siteName: string;
+            siteUrl: string;
+        };
+        ContentSettingsDto: {
+            articlesPerPage: number;
+            commentsEnabled: boolean;
+            /** @enum {string} */
+            defaultArticleStatus: "DRAFT" | "PUBLISHED";
+        };
+        SeoSettingsDto: {
+            defaultDescription: string;
+            defaultTitle: string;
+            keywords: string[];
+        };
+        SystemSettingsResponseDto: {
+            basic: components["schemas"]["BasicSettingsDto"];
+            content: components["schemas"]["ContentSettingsDto"];
+            seo: components["schemas"]["SeoSettingsDto"];
+            /** Format: date-time */
+            updatedAt: string | null;
+        };
+        SettingsErrorResponseDto: {
+            /** @example PERMISSION_DENIED */
+            code: string;
+            /** @example The required permission was not granted. */
+            message: string;
+            /** @example 403 */
+            statusCode: number;
+        };
+        UpdateSystemSettingsDto: {
+            basic: components["schemas"]["BasicSettingsDto"];
+            content: components["schemas"]["ContentSettingsDto"];
+            seo: components["schemas"]["SeoSettingsDto"];
         };
         HealthResponseDto: {
             /**
@@ -1689,6 +1745,88 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminArticleErrorResponseDto"];
+                };
+            };
+        };
+    };
+    getAdminSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemSettingsResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsErrorResponseDto"];
+                };
+            };
+        };
+    };
+    updateAdminSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSystemSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemSettingsResponseDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsErrorResponseDto"];
                 };
             };
         };
