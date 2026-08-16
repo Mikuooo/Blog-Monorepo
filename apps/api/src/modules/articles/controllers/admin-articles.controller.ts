@@ -11,6 +11,7 @@ import {
   Query,
   Req,
   UseGuards,
+  ValidationPipe,
 } from '@nestjs/common'
 import {
   ApiBadRequestResponse,
@@ -24,6 +25,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger'
@@ -81,7 +83,15 @@ export class AdminArticlesController {
   @ApiForbiddenResponse({ type: AdminArticleErrorResponseDto })
   @ApiConflictResponse({ type: AdminArticleErrorResponseDto })
   async create(
-    @Body() body: CreateAdminArticleDto,
+    @Body(
+      new ValidationPipe({
+        expectedType: CreateAdminArticleDto,
+        forbidNonWhitelisted: true,
+        transform: true,
+        whitelist: true,
+      }),
+    )
+    body: CreateAdminArticleDto,
     @Req() request: AuthenticatedRequest,
   ): Promise<AdminArticleCommandResult> {
     const actorId = authenticatedUserId(request)
@@ -90,11 +100,37 @@ export class AdminArticlesController {
 
   @Get()
   @ApiOperation({ operationId: 'listAdminArticles', summary: 'List administration articles' })
+  @ApiQuery({ format: 'uuid', name: 'categoryId', required: false, type: String })
+  @ApiQuery({ maxLength: 120, name: 'keyword', required: false, type: String })
+  @ApiQuery({ default: 1, minimum: 1, name: 'page', required: false, type: Number })
+  @ApiQuery({
+    default: 20,
+    maximum: 100,
+    minimum: 1,
+    name: 'pageSize',
+    required: false,
+    type: Number,
+  })
+  @ApiQuery({
+    enum: ['ARCHIVED', 'DRAFT', 'PUBLISHED', 'SCHEDULED'],
+    name: 'status',
+    required: false,
+  })
   @ApiOkResponse({ type: AdminArticleListResponseDto })
   @ApiBadRequestResponse({ type: AdminArticleErrorResponseDto })
   @ApiUnauthorizedResponse({ type: AdminArticleErrorResponseDto })
   @ApiForbiddenResponse({ type: AdminArticleErrorResponseDto })
-  list(@Query() query: AdminArticleListQueryDto): Promise<AdminArticleListResult> {
+  list(
+    @Query(
+      new ValidationPipe({
+        expectedType: AdminArticleListQueryDto,
+        forbidNonWhitelisted: true,
+        transform: true,
+        whitelist: true,
+      }),
+    )
+    query: AdminArticleListQueryDto,
+  ): Promise<AdminArticleListResult> {
     return this.articleQueryService.list({
       page: query.page,
       pageSize: query.pageSize,

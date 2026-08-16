@@ -522,7 +522,13 @@ export interface operations {
     };
     listAdminArticles: {
         parameters: {
-            query?: never;
+            query?: {
+                status?: "ARCHIVED" | "DRAFT" | "PUBLISHED" | "SCHEDULED";
+                pageSize?: number;
+                page?: number;
+                keyword?: string;
+                categoryId?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
