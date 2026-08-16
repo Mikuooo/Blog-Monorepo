@@ -12,6 +12,7 @@ import { sessionCookieName } from './modules/auth/auth-cookie.js'
 import { trustedOrigins } from './modules/auth/guards/trusted-origin.guard.js'
 import { InternalSystemModule } from './modules/system/internal-system.module.js'
 import { SystemModule } from './modules/system/system.module.js'
+import { TaxonomiesModule } from './modules/taxonomies/taxonomies.module.js'
 
 export type CreateApplicationOptions = {
   disableLogger?: boolean
@@ -50,7 +51,7 @@ export function createPublicOpenApiDocument(app: Awaited<ReturnType<typeof NestF
     .build()
   return SwaggerModule.createDocument(app, config, {
     deepScanRoutes: true,
-    include: [SystemModule, AuthModule, ArticlesModule],
+    include: [SystemModule, AuthModule, ArticlesModule, TaxonomiesModule],
   })
 }
 

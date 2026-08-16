@@ -83,7 +83,7 @@ function SidebarContent({
 
   function renderNavigationItem(item: NavigationItem) {
     const active = pathname === item.href || pathname.startsWith(`${item.href}/`)
-    const unavailable = !['/dashboard', '/articles'].includes(item.href)
+    const unavailable = !['/dashboard', '/articles', '/categories', '/tags'].includes(item.href)
 
     return unavailable ? (
       <span

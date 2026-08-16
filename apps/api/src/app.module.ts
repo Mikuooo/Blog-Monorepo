@@ -7,6 +7,7 @@ import { ArticlesModule } from './modules/articles/articles.module.js'
 import { InternalArticlesModule } from './modules/articles/internal-articles.module.js'
 import { InternalSystemModule } from './modules/system/internal-system.module.js'
 import { SystemModule } from './modules/system/system.module.js'
+import { TaxonomiesModule } from './modules/taxonomies/taxonomies.module.js'
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { SystemModule } from './modules/system/system.module.js'
     InternalArticlesModule,
     SystemModule,
     InternalSystemModule,
+    TaxonomiesModule,
   ],
 })
 export class AppModule {}

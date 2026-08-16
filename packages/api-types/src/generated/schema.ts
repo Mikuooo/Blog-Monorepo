@@ -176,6 +176,78 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List categories */
+        get: operations["listAdminCategories"];
+        put?: never;
+        /** Create a category */
+        post: operations["createAdminCategory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/categories/{categoryId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Soft-delete a category */
+        delete: operations["deleteAdminCategory"];
+        options?: never;
+        head?: never;
+        /** Update a category */
+        patch: operations["updateAdminCategory"];
+        trace?: never;
+    };
+    "/api/v1/admin/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List tags */
+        get: operations["listAdminTags"];
+        put?: never;
+        /** Create a tag */
+        post: operations["createAdminTag"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/tags/{tagId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a tag */
+        delete: operations["deleteAdminTag"];
+        options?: never;
+        head?: never;
+        /** Update a tag */
+        patch: operations["updateAdminTag"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -407,6 +479,92 @@ export interface components {
              * @enum {string}
              */
             status: "ok";
+        };
+        TaxonomyParentDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        CategoryListItemDto: {
+            articleCount: number;
+            childCount: number;
+            /** Format: date-time */
+            createdAt: string;
+            description: string | null;
+            /** Format: uuid */
+            id: string;
+            name: string;
+            parent: components["schemas"]["TaxonomyParentDto"] | null;
+            slug: string;
+            sortOrder: number;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CategoryListResponseDto: {
+            items: components["schemas"]["CategoryListItemDto"][];
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+        };
+        TaxonomyErrorResponseDto: {
+            /** @example CATEGORY_NOT_FOUND */
+            code: string;
+            /** @example The requested category was not found. */
+            message: string;
+            /** @example 404 */
+            statusCode: number;
+        };
+        CreateCategoryDto: {
+            description?: string;
+            name: string;
+            /** Format: uuid */
+            parentId?: string;
+            slug: string;
+            /** @default 0 */
+            sortOrder: number;
+        };
+        UpdateCategoryDto: {
+            description?: string;
+            name?: string;
+            /** Format: uuid */
+            parentId?: string | null;
+            slug?: string;
+            sortOrder?: number;
+        };
+        TaxonomyDeleteResponseDto: {
+            articleCount: number;
+            /** Format: uuid */
+            id: string;
+        };
+        TagListItemDto: {
+            articleCount: number;
+            /** Format: date-time */
+            createdAt: string;
+            description: string | null;
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        TagListResponseDto: {
+            items: components["schemas"]["TagListItemDto"][];
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+        };
+        CreateTagDto: {
+            description?: string;
+            name: string;
+            slug: string;
+        };
+        UpdateTagDto: {
+            description?: string;
+            name?: string;
+            slug?: string;
         };
     };
     responses: never;
@@ -1015,6 +1173,302 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponseDto"];
+                };
+            };
+        };
+    };
+    listAdminCategories: {
+        parameters: {
+            query?: {
+                pageSize?: number;
+                page?: number;
+                keyword?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryListResponseDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+        };
+    };
+    createAdminCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCategoryDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryListItemDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+        };
+    };
+    deleteAdminCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                categoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyDeleteResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+        };
+    };
+    updateAdminCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                categoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCategoryDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryListItemDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+        };
+    };
+    listAdminTags: {
+        parameters: {
+            query?: {
+                pageSize?: number;
+                page?: number;
+                keyword?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagListResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+        };
+    };
+    createAdminTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTagDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagListItemDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+        };
+    };
+    deleteAdminTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tagId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyDeleteResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+        };
+    };
+    updateAdminTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tagId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTagDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagListItemDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
                 };
             };
         };
