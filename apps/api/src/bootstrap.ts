@@ -5,6 +5,7 @@ import helmet from 'helmet'
 import { Logger } from 'nestjs-pino'
 
 import { AppModule } from './app.module.js'
+import { AccessControlModule } from './modules/access-control/access-control.module.js'
 import { ArticlesModule } from './modules/articles/articles.module.js'
 import { InternalArticlesModule } from './modules/articles/internal-articles.module.js'
 import { AuthModule } from './modules/auth/auth.module.js'
@@ -51,7 +52,7 @@ export function createPublicOpenApiDocument(app: Awaited<ReturnType<typeof NestF
     .build()
   return SwaggerModule.createDocument(app, config, {
     deepScanRoutes: true,
-    include: [SystemModule, AuthModule, ArticlesModule, TaxonomiesModule],
+    include: [SystemModule, AuthModule, ArticlesModule, TaxonomiesModule, AccessControlModule],
   })
 }
 

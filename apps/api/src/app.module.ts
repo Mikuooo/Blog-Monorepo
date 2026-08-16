@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common'
 import { LoggerModule } from 'nestjs-pino'
 
 import { PrismaInfrastructureModule } from './infrastructure/prisma/prisma-infrastructure.module.js'
+import { AccessControlModule } from './modules/access-control/access-control.module.js'
 import { AuthModule } from './modules/auth/auth.module.js'
 import { ArticlesModule } from './modules/articles/articles.module.js'
 import { InternalArticlesModule } from './modules/articles/internal-articles.module.js'
@@ -18,6 +19,7 @@ import { TaxonomiesModule } from './modules/taxonomies/taxonomies.module.js'
       },
     }),
     PrismaInfrastructureModule,
+    AccessControlModule,
     AuthModule,
     ArticlesModule,
     InternalArticlesModule,
