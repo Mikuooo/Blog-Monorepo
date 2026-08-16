@@ -6,8 +6,10 @@ import { hashPassword } from '@blog/shared/password'
 
 import { PrismaClient } from '../src/generated/prisma/client.js'
 
-const databaseUrl = process.env.DATABASE_URL?.trim()
-if (!databaseUrl) throw new Error('DATABASE_URL is required for database seeding')
+const databaseUrl = process.env.DATABASE_OWNER_URL?.trim() || process.env.DATABASE_URL?.trim()
+if (!databaseUrl) {
+  throw new Error('DATABASE_OWNER_URL or DATABASE_URL is required for database seeding')
+}
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: databaseUrl }),

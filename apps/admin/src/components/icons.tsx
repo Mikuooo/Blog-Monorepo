@@ -8,6 +8,7 @@ import {
   Folder,
   Image,
   LayoutDashboard,
+  LogOut,
   Menu,
   MessageSquare,
   MoreHorizontal,
@@ -32,6 +33,7 @@ export type IconName =
   | 'file-text'
   | 'folder'
   | 'image'
+  | 'log-out'
   | 'menu'
   | 'message'
   | 'more'
@@ -53,6 +55,7 @@ const icons: Record<IconName, LucideIcon> = {
   'file-text': FileText,
   folder: Folder,
   image: Image,
+  'log-out': LogOut,
   menu: Menu,
   message: MessageSquare,
   more: MoreHorizontal,

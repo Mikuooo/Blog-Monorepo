@@ -144,6 +144,575 @@
         ]
       }
     },
+    "/api/v1/admin/users": {
+      "get": {
+        "operationId": "listAdminUsers",
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "ACTIVE",
+                "DISABLED"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "keyword",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 120,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserListResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "List administration users",
+        "tags": [
+          "admin-users"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{userId}/status": {
+      "patch": {
+        "operationId": "updateAdminUserStatus",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserListItemDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Update user status",
+        "tags": [
+          "admin-users"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{userId}/roles": {
+      "patch": {
+        "operationId": "updateAdminUserRoles",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRolesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserListItemDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Replace user roles",
+        "tags": [
+          "admin-users"
+        ]
+      }
+    },
+    "/api/v1/admin/roles": {
+      "get": {
+        "operationId": "listAdminRoles",
+        "parameters": [
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "keyword",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 120,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminRoleListResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "List roles",
+        "tags": [
+          "admin-roles"
+        ]
+      },
+      "post": {
+        "operationId": "createAdminRole",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminRoleListItemDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Create a role",
+        "tags": [
+          "admin-roles"
+        ]
+      }
+    },
+    "/api/v1/admin/roles/permissions": {
+      "get": {
+        "operationId": "listAdminPermissions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PermissionSummaryDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "List permissions",
+        "tags": [
+          "admin-roles"
+        ]
+      }
+    },
+    "/api/v1/admin/roles/{roleId}": {
+      "patch": {
+        "operationId": "updateAdminRole",
+        "parameters": [
+          {
+            "name": "roleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminRoleListItemDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Update a role",
+        "tags": [
+          "admin-roles"
+        ]
+      },
+      "delete": {
+        "operationId": "deleteAdminRole",
+        "parameters": [
+          {
+            "name": "roleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteRoleResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessControlErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Delete a role",
+        "tags": [
+          "admin-roles"
+        ]
+      }
+    },
     "/api/v1/admin/articles": {
       "post": {
         "operationId": "createAdminArticle",
@@ -222,7 +791,61 @@
       },
       "get": {
         "operationId": "listAdminArticles",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "ARCHIVED",
+                "DRAFT",
+                "PUBLISHED",
+                "SCHEDULED"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "keyword",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 120,
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -826,6 +1449,118 @@
         ]
       }
     },
+    "/api/v1/admin/settings": {
+      "get": {
+        "operationId": "getAdminSettings",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemSettingsResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Get system settings",
+        "tags": [
+          "admin-settings"
+        ]
+      },
+      "put": {
+        "operationId": "updateAdminSettings",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSystemSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemSettingsResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Update system settings",
+        "tags": [
+          "admin-settings"
+        ]
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "getHealth",
@@ -845,6 +1580,496 @@
         "summary": "Check API liveness",
         "tags": [
           "system"
+        ]
+      }
+    },
+    "/api/v1/admin/categories": {
+      "get": {
+        "operationId": "listAdminCategories",
+        "parameters": [
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "keyword",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 120,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryListResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "List categories",
+        "tags": [
+          "admin-categories"
+        ]
+      },
+      "post": {
+        "operationId": "createAdminCategory",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryListItemDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Create a category",
+        "tags": [
+          "admin-categories"
+        ]
+      }
+    },
+    "/api/v1/admin/categories/{categoryId}": {
+      "patch": {
+        "operationId": "updateAdminCategory",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategoryListItemDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Update a category",
+        "tags": [
+          "admin-categories"
+        ]
+      },
+      "delete": {
+        "operationId": "deleteAdminCategory",
+        "parameters": [
+          {
+            "name": "categoryId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyDeleteResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Soft-delete a category",
+        "tags": [
+          "admin-categories"
+        ]
+      }
+    },
+    "/api/v1/admin/tags": {
+      "get": {
+        "operationId": "listAdminTags",
+        "parameters": [
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "keyword",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maxLength": 120,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagListResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "List tags",
+        "tags": [
+          "admin-tags"
+        ]
+      },
+      "post": {
+        "operationId": "createAdminTag",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTagDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagListItemDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Create a tag",
+        "tags": [
+          "admin-tags"
+        ]
+      }
+    },
+    "/api/v1/admin/tags/{tagId}": {
+      "patch": {
+        "operationId": "updateAdminTag",
+        "parameters": [
+          {
+            "name": "tagId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTagDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagListItemDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyErrorResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Update a tag",
+        "tags": [
+          "admin-tags"
+        ]
+      },
+      "delete": {
+        "operationId": "deleteAdminTag",
+        "parameters": [
+          {
+            "name": "tagId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyDeleteResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "Delete a tag",
+        "tags": [
+          "admin-tags"
         ]
       }
     }
@@ -962,6 +2187,329 @@
           "code",
           "message",
           "statusCode"
+        ]
+      },
+      "RoleSummaryDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "id",
+          "name"
+        ]
+      },
+      "AdminUserListItemDto": {
+        "type": "object",
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lastLoginAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleSummaryDto"
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "DISABLED"
+            ]
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "username": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "createdAt",
+          "displayName",
+          "email",
+          "id",
+          "lastLoginAt",
+          "roles",
+          "status",
+          "updatedAt",
+          "username"
+        ]
+      },
+      "AdminUserListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminUserListItemDto"
+            }
+          },
+          "page": {
+            "type": "number"
+          },
+          "pageSize": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "totalPages": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total",
+          "totalPages"
+        ]
+      },
+      "AccessControlErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "USER_NOT_FOUND"
+          },
+          "message": {
+            "type": "string",
+            "example": "The requested user was not found."
+          },
+          "statusCode": {
+            "type": "number",
+            "example": 404
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "statusCode"
+        ]
+      },
+      "UpdateUserStatusDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "DISABLED"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "UpdateUserRolesDto": {
+        "type": "object",
+        "properties": {
+          "roleIds": {
+            "maxItems": 50,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "roleIds"
+        ]
+      },
+      "PermissionSummaryDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "code",
+          "description",
+          "id"
+        ]
+      },
+      "AdminRoleListItemDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "isSystem": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PermissionSummaryDto"
+            }
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "userCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "code",
+          "createdAt",
+          "description",
+          "id",
+          "isSystem",
+          "name",
+          "permissions",
+          "updatedAt",
+          "userCount"
+        ]
+      },
+      "AdminRoleListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminRoleListItemDto"
+            }
+          },
+          "page": {
+            "type": "number"
+          },
+          "pageSize": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "totalPages": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total",
+          "totalPages"
+        ]
+      },
+      "CreateRoleDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "maxLength": 80,
+            "pattern": "^[A-Z][A-Z0-9_]*$"
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "permissionIds": {
+            "maxItems": 200,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "permissionIds"
+        ]
+      },
+      "UpdateRoleDto": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "permissionIds": {
+            "maxItems": 200,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "DeleteRoleResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "id"
         ]
       },
       "AdminArticleListQueryDto": {
@@ -1633,6 +3181,155 @@
           "scheduledAt"
         ]
       },
+      "BasicSettingsDto": {
+        "type": "object",
+        "properties": {
+          "faviconUrl": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "logoUrl": {
+            "type": "string",
+            "maxLength": 2048
+          },
+          "siteDescription": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "siteName": {
+            "type": "string",
+            "maxLength": 160,
+            "minLength": 1
+          },
+          "siteUrl": {
+            "type": "string",
+            "maxLength": 2048
+          }
+        },
+        "required": [
+          "faviconUrl",
+          "logoUrl",
+          "siteDescription",
+          "siteName",
+          "siteUrl"
+        ]
+      },
+      "ContentSettingsDto": {
+        "type": "object",
+        "properties": {
+          "articlesPerPage": {
+            "type": "number",
+            "maximum": 100,
+            "minimum": 10
+          },
+          "commentsEnabled": {
+            "type": "boolean"
+          },
+          "defaultArticleStatus": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "PUBLISHED"
+            ]
+          }
+        },
+        "required": [
+          "articlesPerPage",
+          "commentsEnabled",
+          "defaultArticleStatus"
+        ]
+      },
+      "SeoSettingsDto": {
+        "type": "object",
+        "properties": {
+          "defaultDescription": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "defaultTitle": {
+            "type": "string",
+            "maxLength": 240
+          },
+          "keywords": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "defaultDescription",
+          "defaultTitle",
+          "keywords"
+        ]
+      },
+      "SystemSettingsResponseDto": {
+        "type": "object",
+        "properties": {
+          "basic": {
+            "$ref": "#/components/schemas/BasicSettingsDto"
+          },
+          "content": {
+            "$ref": "#/components/schemas/ContentSettingsDto"
+          },
+          "seo": {
+            "$ref": "#/components/schemas/SeoSettingsDto"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "basic",
+          "content",
+          "seo",
+          "updatedAt"
+        ]
+      },
+      "SettingsErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "PERMISSION_DENIED"
+          },
+          "message": {
+            "type": "string",
+            "example": "The required permission was not granted."
+          },
+          "statusCode": {
+            "type": "number",
+            "example": 403
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "statusCode"
+        ]
+      },
+      "UpdateSystemSettingsDto": {
+        "type": "object",
+        "properties": {
+          "basic": {
+            "$ref": "#/components/schemas/BasicSettingsDto"
+          },
+          "content": {
+            "$ref": "#/components/schemas/ContentSettingsDto"
+          },
+          "seo": {
+            "$ref": "#/components/schemas/SeoSettingsDto"
+          }
+        },
+        "required": [
+          "basic",
+          "content",
+          "seo"
+        ]
+      },
       "HealthResponseDto": {
         "type": "object",
         "properties": {
@@ -1655,6 +3352,312 @@
           "service",
           "status"
         ]
+      },
+      "TaxonomyParentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "CategoryListItemDto": {
+        "type": "object",
+        "properties": {
+          "articleCount": {
+            "type": "number"
+          },
+          "childCount": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "parent": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TaxonomyParentDto"
+              }
+            ]
+          },
+          "slug": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "articleCount",
+          "childCount",
+          "createdAt",
+          "description",
+          "id",
+          "name",
+          "parent",
+          "slug",
+          "sortOrder",
+          "updatedAt"
+        ]
+      },
+      "CategoryListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryListItemDto"
+            }
+          },
+          "page": {
+            "type": "number"
+          },
+          "pageSize": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "totalPages": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total",
+          "totalPages"
+        ]
+      },
+      "TaxonomyErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "CATEGORY_NOT_FOUND"
+          },
+          "message": {
+            "type": "string",
+            "example": "The requested category was not found."
+          },
+          "statusCode": {
+            "type": "number",
+            "example": 404
+          }
+        },
+        "required": [
+          "code",
+          "message",
+          "statusCode"
+        ]
+      },
+      "CreateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "parentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slug": {
+            "type": "string",
+            "maxLength": 160,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "sortOrder": {
+            "type": "number",
+            "default": 0
+          }
+        },
+        "required": [
+          "name",
+          "slug"
+        ]
+      },
+      "UpdateCategoryDto": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "parentId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "slug": {
+            "type": "string",
+            "maxLength": 160,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "sortOrder": {
+            "type": "number"
+          }
+        }
+      },
+      "TaxonomyDeleteResponseDto": {
+        "type": "object",
+        "properties": {
+          "articleCount": {
+            "type": "number"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "articleCount",
+          "id"
+        ]
+      },
+      "TagListItemDto": {
+        "type": "object",
+        "properties": {
+          "articleCount": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "articleCount",
+          "createdAt",
+          "description",
+          "id",
+          "name",
+          "slug",
+          "updatedAt"
+        ]
+      },
+      "TagListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TagListItemDto"
+            }
+          },
+          "page": {
+            "type": "number"
+          },
+          "pageSize": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "totalPages": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total",
+          "totalPages"
+        ]
+      },
+      "CreateTagDto": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "slug": {
+            "type": "string",
+            "maxLength": 160,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          }
+        },
+        "required": [
+          "name",
+          "slug"
+        ]
+      },
+      "UpdateTagDto": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "slug": {
+            "type": "string",
+            "maxLength": 160,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          }
+        }
       }
     }
   }

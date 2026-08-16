@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:18-alpine
+    profiles: ['local-db']
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-blog_dev}
@@ -19,6 +20,7 @@ services:
 
   redis:
     image: redis:8-alpine
+    profiles: ['local-cache']
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
     healthcheck:

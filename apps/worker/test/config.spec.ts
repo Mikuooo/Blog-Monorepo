@@ -4,17 +4,19 @@ import { loadWorkerConfiguration } from '../src/config.js'
 
 describe('loadWorkerConfiguration', () => {
   const required = {
+    BULLMQ_PREFIX: 'bull:test',
     DATABASE_URL: 'postgresql://blog:blog@localhost:5432/blog_test',
     INTERNAL_API_BASE_URL: 'http://localhost:3001',
     INTERNAL_WORKLOAD_AUDIENCE: 'blog-api-internal',
     INTERNAL_WORKLOAD_ISSUER: 'blog-worker',
     INTERNAL_WORKLOAD_SECRET: 'a-secure-test-secret-with-32-bytes',
     INTERNAL_WORKLOAD_SUBJECT: 'apps/worker',
-    REDIS_URL: 'redis://localhost:6379',
+    REDIS_WORKER_URL: 'redis://localhost:6379',
   }
 
   it('loads bounded defaults', () => {
     expect(loadWorkerConfiguration(required)).toEqual({
+      bullmqPrefix: 'bull:test',
       concurrency: 4,
       databaseUrl: 'postgresql://blog:blog@localhost:5432/blog_test',
       healthPort: 3003,
@@ -32,8 +34,14 @@ describe('loadWorkerConfiguration', () => {
   })
 
   it('rejects a non-Redis URL', () => {
-    expect(() => loadWorkerConfiguration({ ...required, REDIS_URL: 'https://localhost' })).toThrow(
-      'REDIS_URL must use redis:// or rediss://',
+    expect(() =>
+      loadWorkerConfiguration({ ...required, REDIS_WORKER_URL: 'https://localhost' }),
+    ).toThrow('REDIS_WORKER_URL must use redis:// or rediss://')
+  })
+
+  it('rejects a BullMQ prefix outside the worker ACL namespace', () => {
+    expect(() => loadWorkerConfiguration({ ...required, BULLMQ_PREFIX: 'blog:test' })).toThrow(
+      'BULLMQ_PREFIX must match bull:<environment>',
     )
   })
 

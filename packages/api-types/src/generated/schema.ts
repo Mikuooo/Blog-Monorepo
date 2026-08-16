@@ -55,6 +55,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/users": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List administration users */
+        get: operations["listAdminUsers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/users/{userId}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update user status */
+        patch: operations["updateAdminUserStatus"];
+        trace?: never;
+    };
+    "/api/v1/admin/users/{userId}/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Replace user roles */
+        patch: operations["updateAdminUserRoles"];
+        trace?: never;
+    };
+    "/api/v1/admin/roles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List roles */
+        get: operations["listAdminRoles"];
+        put?: never;
+        /** Create a role */
+        post: operations["createAdminRole"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/roles/permissions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List permissions */
+        get: operations["listAdminPermissions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/roles/{roleId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a role */
+        delete: operations["deleteAdminRole"];
+        options?: never;
+        head?: never;
+        /** Update a role */
+        patch: operations["updateAdminRole"];
+        trace?: never;
+    };
     "/api/v1/admin/articles": {
         parameters: {
             query?: never;
@@ -159,6 +263,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get system settings */
+        get: operations["getAdminSettings"];
+        /** Update system settings */
+        put: operations["updateAdminSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -174,6 +296,78 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List categories */
+        get: operations["listAdminCategories"];
+        put?: never;
+        /** Create a category */
+        post: operations["createAdminCategory"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/categories/{categoryId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Soft-delete a category */
+        delete: operations["deleteAdminCategory"];
+        options?: never;
+        head?: never;
+        /** Update a category */
+        patch: operations["updateAdminCategory"];
+        trace?: never;
+    };
+    "/api/v1/admin/tags": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List tags */
+        get: operations["listAdminTags"];
+        put?: never;
+        /** Create a tag */
+        post: operations["createAdminTag"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/tags/{tagId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete a tag */
+        delete: operations["deleteAdminTag"];
+        options?: never;
+        head?: never;
+        /** Update a tag */
+        patch: operations["updateAdminTag"];
         trace?: never;
     };
 }
@@ -208,6 +402,92 @@ export interface components {
             message: string;
             /** @example 401 */
             statusCode: number;
+        };
+        RoleSummaryDto: {
+            code: string;
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        AdminUserListItemDto: {
+            /** Format: date-time */
+            createdAt: string;
+            displayName: string;
+            email: string;
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            lastLoginAt: string | null;
+            roles: components["schemas"]["RoleSummaryDto"][];
+            /** @enum {string} */
+            status: "ACTIVE" | "DISABLED";
+            /** Format: date-time */
+            updatedAt: string;
+            username: string;
+        };
+        AdminUserListResponseDto: {
+            items: components["schemas"]["AdminUserListItemDto"][];
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+        };
+        AccessControlErrorResponseDto: {
+            /** @example USER_NOT_FOUND */
+            code: string;
+            /** @example The requested user was not found. */
+            message: string;
+            /** @example 404 */
+            statusCode: number;
+        };
+        UpdateUserStatusDto: {
+            /** @enum {string} */
+            status: "ACTIVE" | "DISABLED";
+        };
+        UpdateUserRolesDto: {
+            roleIds: string[];
+        };
+        PermissionSummaryDto: {
+            code: string;
+            description: string | null;
+            /** Format: uuid */
+            id: string;
+        };
+        AdminRoleListItemDto: {
+            code: string;
+            /** Format: date-time */
+            createdAt: string;
+            description: string | null;
+            /** Format: uuid */
+            id: string;
+            isSystem: boolean;
+            name: string;
+            permissions: components["schemas"]["PermissionSummaryDto"][];
+            /** Format: date-time */
+            updatedAt: string;
+            userCount: number;
+        };
+        AdminRoleListResponseDto: {
+            items: components["schemas"]["AdminRoleListItemDto"][];
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+        };
+        CreateRoleDto: {
+            code: string;
+            description?: string;
+            name: string;
+            permissionIds: string[];
+        };
+        UpdateRoleDto: {
+            description?: string;
+            name?: string;
+            permissionIds?: string[];
+        };
+        DeleteRoleResponseDto: {
+            /** Format: uuid */
+            id: string;
         };
         AdminArticleListQueryDto: {
             /** Format: uuid */
@@ -396,6 +676,44 @@ export interface components {
             /** Format: date-time */
             scheduledAt: string;
         };
+        BasicSettingsDto: {
+            faviconUrl: string;
+            logoUrl: string;
+            siteDescription: string;
+            siteName: string;
+            siteUrl: string;
+        };
+        ContentSettingsDto: {
+            articlesPerPage: number;
+            commentsEnabled: boolean;
+            /** @enum {string} */
+            defaultArticleStatus: "DRAFT" | "PUBLISHED";
+        };
+        SeoSettingsDto: {
+            defaultDescription: string;
+            defaultTitle: string;
+            keywords: string[];
+        };
+        SystemSettingsResponseDto: {
+            basic: components["schemas"]["BasicSettingsDto"];
+            content: components["schemas"]["ContentSettingsDto"];
+            seo: components["schemas"]["SeoSettingsDto"];
+            /** Format: date-time */
+            updatedAt: string | null;
+        };
+        SettingsErrorResponseDto: {
+            /** @example PERMISSION_DENIED */
+            code: string;
+            /** @example The required permission was not granted. */
+            message: string;
+            /** @example 403 */
+            statusCode: number;
+        };
+        UpdateSystemSettingsDto: {
+            basic: components["schemas"]["BasicSettingsDto"];
+            content: components["schemas"]["ContentSettingsDto"];
+            seo: components["schemas"]["SeoSettingsDto"];
+        };
         HealthResponseDto: {
             /**
              * @example api
@@ -407,6 +725,92 @@ export interface components {
              * @enum {string}
              */
             status: "ok";
+        };
+        TaxonomyParentDto: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
+        CategoryListItemDto: {
+            articleCount: number;
+            childCount: number;
+            /** Format: date-time */
+            createdAt: string;
+            description: string | null;
+            /** Format: uuid */
+            id: string;
+            name: string;
+            parent: components["schemas"]["TaxonomyParentDto"] | null;
+            slug: string;
+            sortOrder: number;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CategoryListResponseDto: {
+            items: components["schemas"]["CategoryListItemDto"][];
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+        };
+        TaxonomyErrorResponseDto: {
+            /** @example CATEGORY_NOT_FOUND */
+            code: string;
+            /** @example The requested category was not found. */
+            message: string;
+            /** @example 404 */
+            statusCode: number;
+        };
+        CreateCategoryDto: {
+            description?: string;
+            name: string;
+            /** Format: uuid */
+            parentId?: string;
+            slug: string;
+            /** @default 0 */
+            sortOrder: number;
+        };
+        UpdateCategoryDto: {
+            description?: string;
+            name?: string;
+            /** Format: uuid */
+            parentId?: string | null;
+            slug?: string;
+            sortOrder?: number;
+        };
+        TaxonomyDeleteResponseDto: {
+            articleCount: number;
+            /** Format: uuid */
+            id: string;
+        };
+        TagListItemDto: {
+            articleCount: number;
+            /** Format: date-time */
+            createdAt: string;
+            description: string | null;
+            /** Format: uuid */
+            id: string;
+            name: string;
+            slug: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        TagListResponseDto: {
+            items: components["schemas"]["TagListItemDto"][];
+            page: number;
+            pageSize: number;
+            total: number;
+            totalPages: number;
+        };
+        CreateTagDto: {
+            description?: string;
+            name: string;
+            slug: string;
+        };
+        UpdateTagDto: {
+            description?: string;
+            name?: string;
+            slug?: string;
         };
     };
     responses: never;
@@ -520,9 +924,360 @@ export interface operations {
             };
         };
     };
-    listAdminArticles: {
+    listAdminUsers: {
+        parameters: {
+            query?: {
+                status?: "ACTIVE" | "DISABLED";
+                pageSize?: number;
+                page?: number;
+                keyword?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserListResponseDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+        };
+    };
+    updateAdminUserStatus: {
         parameters: {
             query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserStatusDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserListItemDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+        };
+    };
+    updateAdminUserRoles: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserRolesDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminUserListItemDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+        };
+    };
+    listAdminRoles: {
+        parameters: {
+            query?: {
+                pageSize?: number;
+                page?: number;
+                keyword?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminRoleListResponseDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+        };
+    };
+    createAdminRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRoleDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminRoleListItemDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+        };
+    };
+    listAdminPermissions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PermissionSummaryDto"][];
+                };
+            };
+        };
+    };
+    deleteAdminRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DeleteRoleResponseDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+        };
+    };
+    updateAdminRole: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                roleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRoleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminRoleListItemDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccessControlErrorResponseDto"];
+                };
+            };
+        };
+    };
+    listAdminArticles: {
+        parameters: {
+            query?: {
+                status?: "ARCHIVED" | "DRAFT" | "PUBLISHED" | "SCHEDULED";
+                pageSize?: number;
+                page?: number;
+                keyword?: string;
+                categoryId?: string;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -994,6 +1749,88 @@ export interface operations {
             };
         };
     };
+    getAdminSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemSettingsResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsErrorResponseDto"];
+                };
+            };
+        };
+    };
+    updateAdminSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSystemSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SystemSettingsResponseDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SettingsErrorResponseDto"];
+                };
+            };
+        };
+    };
     getHealth: {
         parameters: {
             query?: never;
@@ -1009,6 +1846,302 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponseDto"];
+                };
+            };
+        };
+    };
+    listAdminCategories: {
+        parameters: {
+            query?: {
+                pageSize?: number;
+                page?: number;
+                keyword?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryListResponseDto"];
+                };
+            };
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+        };
+    };
+    createAdminCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCategoryDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryListItemDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+        };
+    };
+    deleteAdminCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                categoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyDeleteResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+        };
+    };
+    updateAdminCategory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                categoryId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCategoryDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryListItemDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+        };
+    };
+    listAdminTags: {
+        parameters: {
+            query?: {
+                pageSize?: number;
+                page?: number;
+                keyword?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagListResponseDto"];
+                };
+            };
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+        };
+    };
+    createAdminTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTagDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagListItemDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+        };
+    };
+    deleteAdminTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tagId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyDeleteResponseDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+        };
+    };
+    updateAdminTag: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tagId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateTagDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TagListItemDto"];
+                };
+            };
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
+                };
+            };
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyErrorResponseDto"];
                 };
             };
         };

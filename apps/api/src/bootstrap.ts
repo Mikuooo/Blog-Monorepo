@@ -5,13 +5,16 @@ import helmet from 'helmet'
 import { Logger } from 'nestjs-pino'
 
 import { AppModule } from './app.module.js'
+import { AccessControlModule } from './modules/access-control/access-control.module.js'
 import { ArticlesModule } from './modules/articles/articles.module.js'
 import { InternalArticlesModule } from './modules/articles/internal-articles.module.js'
 import { AuthModule } from './modules/auth/auth.module.js'
 import { sessionCookieName } from './modules/auth/auth-cookie.js'
 import { trustedOrigins } from './modules/auth/guards/trusted-origin.guard.js'
+import { SettingsModule } from './modules/settings/settings.module.js'
 import { InternalSystemModule } from './modules/system/internal-system.module.js'
 import { SystemModule } from './modules/system/system.module.js'
+import { TaxonomiesModule } from './modules/taxonomies/taxonomies.module.js'
 
 export type CreateApplicationOptions = {
   disableLogger?: boolean
@@ -50,7 +53,14 @@ export function createPublicOpenApiDocument(app: Awaited<ReturnType<typeof NestF
     .build()
   return SwaggerModule.createDocument(app, config, {
     deepScanRoutes: true,
-    include: [SystemModule, AuthModule, ArticlesModule],
+    include: [
+      SystemModule,
+      AuthModule,
+      ArticlesModule,
+      TaxonomiesModule,
+      AccessControlModule,
+      SettingsModule,
+    ],
   })
 }
 

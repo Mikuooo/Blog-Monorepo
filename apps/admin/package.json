@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@blog/api-client": "workspace:*",
+    "@blog/api-types": "workspace:*",
     "@blog/schemas": "workspace:*",
     "@blog/ui": "workspace:*",
     "@hookform/resolvers": "^5.7.1",
