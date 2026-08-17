@@ -38,7 +38,6 @@ export function toCreateCategory(values: CategoryFormValues): CreateCategoryRequ
   return {
     name: values.name.trim(),
     slug: values.slug.trim(),
-    sortOrder: values.sortOrder,
     ...(values.description ? { description: values.description.trim() } : {}),
     ...(values.parentId ? { parentId: values.parentId } : {}),
   }

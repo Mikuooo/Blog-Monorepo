@@ -1,20 +1,21 @@
 'use client'
 
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Button } from '@blog/ui/components/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@blog/ui/components/card'
 import { Input } from '@blog/ui/components/input'
-import Link from 'next/link'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { useEffect } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 
 import { useCurrentUser } from '@/features/auth/auth-query'
 
 import { ArticleApiError, createArticle } from './article-api'
+import { ArticleCoverField } from './article-cover-field'
 import { articleKeys } from './article-query'
+import { ArticleRichTextEditor } from './article-rich-text-editor'
 import {
   articleFormDefaults,
   articleFormSchema,
@@ -22,6 +23,7 @@ import {
   toCreateArticleRequest,
   type ArticleFormValues,
 } from './article-schema'
+import { CategoryCascadeField, TagPickerField } from './article-taxonomy-fields'
 
 const inputClassName =
   'w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50'
@@ -35,6 +37,10 @@ export function ArticleForm() {
     resolver: zodResolver(articleFormSchema),
   })
   const visibility = useWatch({ control: form.control, name: 'visibility' })
+  const options = useWatch({
+    control: form.control,
+    name: ['allowComment', 'isPinned', 'isFeatured'],
+  })
   const mutation = useMutation({
     mutationFn: createArticle,
     onSuccess: async ({ articleId }) => {
@@ -47,10 +53,9 @@ export function ArticleForm() {
 
   useEffect(() => {
     if (!form.formState.isDirty || mutation.isSuccess) return
-
-    const warnAboutUnsavedChanges = (event: BeforeUnloadEvent) => event.preventDefault()
-    window.addEventListener('beforeunload', warnAboutUnsavedChanges)
-    return () => window.removeEventListener('beforeunload', warnAboutUnsavedChanges)
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault()
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
   }, [form.formState.isDirty, mutation.isSuccess])
 
   if (!canCreate) {
@@ -58,12 +63,9 @@ export function ArticleForm() {
       <Card>
         <CardHeader>
           <CardTitle>没有新建文章权限</CardTitle>
-          <CardDescription>当前账号缺少 article.create 权限，请联系管理员授权。</CardDescription>
         </CardHeader>
-        <CardContent>
-          <Link className="text-sm font-semibold text-primary hover:underline" href="/articles">
-            返回文章管理
-          </Link>
+        <CardContent className="text-sm text-muted-foreground">
+          当前账号缺少 article.create 权限。
         </CardContent>
       </Card>
     )
@@ -71,160 +73,61 @@ export function ArticleForm() {
 
   return (
     <form
-      className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_340px]"
       noValidate
       onSubmit={form.handleSubmit((values) => mutation.mutate(toCreateArticleRequest(values)))}
     >
-      <div className="space-y-5">
-        {mutation.isError ? (
-          <p
-            className="rounded-lg border border-destructive/25 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-            role="alert"
-          >
-            {articleErrorMessage(mutation.error)}
-          </p>
-        ) : null}
+      <div className="sticky top-3 z-10 mb-5 flex items-center justify-between rounded-2xl border border-border bg-background/92 px-4 py-3 shadow-sm backdrop-blur">
+        <div>
+          <p className="text-sm font-semibold">新建文章</p>
+          <p className="text-xs text-muted-foreground">所有内容将保存为草稿</p>
+        </div>
+        <Button disabled={mutation.isPending} type="submit">
+          {mutation.isPending ? '正在保存…' : '保存草稿'}
+        </Button>
+      </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>文章内容</CardTitle>
-            <CardDescription>填写标题、访问路径和正文。正文支持 Markdown 内容。</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
+      {mutation.isError ? (
+        <p
+          className="mb-5 rounded-lg border border-destructive/25 bg-destructive-soft px-4 py-3 text-sm text-destructive"
+          role="alert"
+        >
+          {articleErrorMessage(mutation.error)}
+        </p>
+      ) : null}
+
+      <div className="grid items-start gap-5 2xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="article-editor-grid min-w-0 space-y-5 rounded-2xl border border-border p-4 sm:p-6">
+          <div className="grid gap-4 lg:grid-cols-[3fr_1fr_1fr]">
             <Field
-              label="文章标题"
-              required
               error={form.formState.errors.title?.message}
               id="title"
+              label="文章标题"
+              required
             >
               <Input
-                aria-describedby={form.formState.errors.title ? 'title-error' : undefined}
-                aria-invalid={Boolean(form.formState.errors.title)}
                 id="title"
                 maxLength={240}
-                placeholder="输入清晰、易读的文章标题"
+                placeholder="输入文章标题"
                 {...form.register('title', {
                   onBlur: (event) => {
-                    if (!form.getValues('slug')) {
+                    if (!form.getValues('slug'))
                       form.setValue('slug', slugifyTitle(event.target.value), {
                         shouldValidate: true,
                       })
-                    }
                   },
-                  onChange: () => mutation.reset(),
                 })}
               />
             </Field>
-
-            <Field
-              description="用于文章 URL，例如 getting-started。中文标题需要手动填写。"
-              error={form.formState.errors.slug?.message}
-              id="slug"
-              label="文章别名"
-              required
-            >
-              <div className="flex items-center rounded-lg border border-input bg-background focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/20">
-                <span className="shrink-0 pl-3 text-sm text-muted-foreground">/posts/</span>
-                <input
-                  aria-describedby={form.formState.errors.slug ? 'slug-error' : undefined}
-                  aria-invalid={Boolean(form.formState.errors.slug)}
-                  className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm outline-none"
-                  id="slug"
-                  maxLength={240}
-                  placeholder="article-slug"
-                  {...form.register('slug', { onChange: () => mutation.reset() })}
-                />
-              </div>
-            </Field>
-
-            <Field
-              description="用于列表和分享卡片，可留空。"
-              error={form.formState.errors.summary?.message}
-              id="summary"
-              label="摘要"
-            >
-              <textarea
-                aria-describedby={form.formState.errors.summary ? 'summary-error' : undefined}
-                aria-invalid={Boolean(form.formState.errors.summary)}
-                className={`${inputClassName} min-h-24 resize-y`}
-                id="summary"
-                maxLength={5000}
-                placeholder="简要说明文章内容"
-                {...form.register('summary')}
-              />
-            </Field>
-
-            <Field
-              error={form.formState.errors.content?.message}
-              id="content"
-              label="正文"
-              required
-            >
-              <textarea
-                aria-describedby={form.formState.errors.content ? 'content-error' : undefined}
-                aria-invalid={Boolean(form.formState.errors.content)}
-                className={`${inputClassName} min-h-[420px] resize-y font-mono leading-6`}
-                id="content"
-                placeholder="使用 Markdown 编写文章正文…"
-                {...form.register('content')}
-              />
-            </Field>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>搜索与分享</CardTitle>
-            <CardDescription>未填写时将使用文章标题和摘要。</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <Field error={form.formState.errors.seoTitle?.message} id="seoTitle" label="SEO 标题">
-              <Input id="seoTitle" maxLength={240} {...form.register('seoTitle')} />
-            </Field>
-            <Field
-              error={form.formState.errors.seoDescription?.message}
-              id="seoDescription"
-              label="SEO 描述"
-            >
-              <textarea
-                className={`${inputClassName} min-h-24 resize-y`}
-                id="seoDescription"
-                maxLength={500}
-                {...form.register('seoDescription')}
-              />
-            </Field>
-            <Field
-              description="声明内容的首选公开地址。"
-              error={form.formState.errors.canonicalUrl?.message}
-              id="canonicalUrl"
-              label="规范链接"
-            >
+            <Field error={form.formState.errors.slug?.message} id="slug" label="文章别名" required>
               <Input
-                aria-describedby={
-                  form.formState.errors.canonicalUrl ? 'canonicalUrl-error' : undefined
-                }
-                aria-invalid={Boolean(form.formState.errors.canonicalUrl)}
-                id="canonicalUrl"
-                inputMode="url"
-                placeholder="https://example.com/posts/article"
-                {...form.register('canonicalUrl')}
+                id="slug"
+                maxLength={240}
+                placeholder="article-slug"
+                {...form.register('slug')}
               />
             </Field>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="space-y-5 xl:sticky xl:top-5">
-        <Card>
-          <CardHeader>
-            <CardTitle>发布设置</CardTitle>
-            <CardDescription>新文章将以草稿状态保存。</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
             <Field error={form.formState.errors.visibility?.message} id="visibility" label="可见性">
               <select
-                aria-describedby={form.formState.errors.visibility ? 'visibility-error' : undefined}
-                aria-invalid={Boolean(form.formState.errors.visibility)}
                 className={`${inputClassName} h-10`}
                 id="visibility"
                 {...form.register('visibility')}
@@ -234,95 +137,141 @@ export function ArticleForm() {
                 <option value="PASSWORD">密码访问</option>
               </select>
             </Field>
-            {visibility === 'PASSWORD' ? (
-              <Field
-                error={form.formState.errors.password?.message}
+          </div>
+
+          {visibility === 'PASSWORD' ? (
+            <Field
+              error={form.formState.errors.password?.message}
+              id="password"
+              label="访问密码"
+              required
+            >
+              <Input
                 id="password"
-                label="访问密码"
-                required
-              >
-                <Input
-                  aria-describedby={form.formState.errors.password ? 'password-error' : undefined}
-                  aria-invalid={Boolean(form.formState.errors.password)}
-                  autoComplete="new-password"
-                  id="password"
-                  maxLength={128}
-                  placeholder="至少 8 位"
-                  type="password"
-                  {...form.register('password')}
+                maxLength={128}
+                placeholder="至少 8 位"
+                type="password"
+                {...form.register('password')}
+              />
+            </Field>
+          ) : null}
+
+          <Field error={form.formState.errors.summary?.message} id="summary" label="摘要">
+            <textarea
+              className={`${inputClassName} min-h-24 resize-y`}
+              id="summary"
+              maxLength={5000}
+              placeholder="用于列表与分享卡片"
+              {...form.register('summary')}
+            />
+          </Field>
+
+          <Field error={form.formState.errors.content?.message} id="content" label="正文" required>
+            <Controller
+              control={form.control}
+              name="content"
+              render={({ field, fieldState }) => (
+                <ArticleRichTextEditor
+                  initialValue={field.value}
+                  invalid={Boolean(fieldState.error)}
+                  onBlur={field.onBlur}
+                  onChange={(value) => field.onChange(value)}
+                />
+              )}
+            />
+          </Field>
+        </div>
+
+        <aside className="space-y-5 2xl:sticky 2xl:top-24">
+          <Card>
+            <CardHeader>
+              <CardTitle>文章设置</CardTitle>
+              <CardDescription>分类、标签、封面与展示方式。</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <Field error={form.formState.errors.categoryId?.message} id="categoryId" label="分类">
+                <Controller
+                  control={form.control}
+                  name="categoryId"
+                  render={({ field }) => (
+                    <CategoryCascadeField onChange={field.onChange} value={field.value} />
+                  )}
                 />
               </Field>
-            ) : null}
-            <div className="space-y-3 border-t pt-4">
-              <Checkbox label="允许评论" {...form.register('allowComment')} />
-              <Checkbox label="置顶文章" {...form.register('isPinned')} />
-              <Checkbox label="设为精选" {...form.register('isFeatured')} />
-            </div>
-          </CardContent>
-        </Card>
+              <Field error={form.formState.errors.tagIds?.message} id="tagIds" label="标签">
+                <Controller
+                  control={form.control}
+                  name="tagIds"
+                  render={({ field }) => (
+                    <TagPickerField onChange={field.onChange} value={field.value} />
+                  )}
+                />
+              </Field>
+              <Field error={form.formState.errors.coverId?.message} id="coverId" label="封面">
+                <Controller
+                  control={form.control}
+                  name="coverId"
+                  render={({ field }) => (
+                    <ArticleCoverField onChange={field.onChange} value={field.value} />
+                  )}
+                />
+              </Field>
+              <div className="grid grid-cols-3 overflow-hidden rounded-xl border border-border">
+                <OptionButton
+                  active={options[0]}
+                  label="允许评论"
+                  onClick={() => form.setValue('allowComment', !options[0], { shouldDirty: true })}
+                />
+                <OptionButton
+                  active={options[1]}
+                  label="置顶文章"
+                  onClick={() => form.setValue('isPinned', !options[1], { shouldDirty: true })}
+                />
+                <OptionButton
+                  active={options[2]}
+                  label="设为精选"
+                  onClick={() => form.setValue('isFeatured', !options[2], { shouldDirty: true })}
+                />
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>高级关联</CardTitle>
-            <CardDescription>仅在已有资源 UUID 时填写。</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <Field
-              error={form.formState.errors.categoryId?.message}
-              id="categoryId"
-              label="分类 UUID"
-            >
-              <Input
-                aria-describedby={form.formState.errors.categoryId ? 'categoryId-error' : undefined}
-                aria-invalid={Boolean(form.formState.errors.categoryId)}
-                id="categoryId"
-                placeholder="可选"
-                {...form.register('categoryId')}
-              />
-            </Field>
-            <Field error={form.formState.errors.coverId?.message} id="coverId" label="封面 UUID">
-              <Input
-                aria-describedby={form.formState.errors.coverId ? 'coverId-error' : undefined}
-                aria-invalid={Boolean(form.formState.errors.coverId)}
-                id="coverId"
-                placeholder="可选"
-                {...form.register('coverId')}
-              />
-            </Field>
-            <Field
-              description="多个 UUID 使用逗号或换行分隔。"
-              error={form.formState.errors.tagIds?.message}
-              id="tagIds"
-              label="标签 UUID"
-            >
-              <textarea
-                aria-describedby={form.formState.errors.tagIds ? 'tagIds-error' : undefined}
-                aria-invalid={Boolean(form.formState.errors.tagIds)}
-                className={`${inputClassName} min-h-20 resize-y font-mono text-xs`}
-                id="tagIds"
-                placeholder="可选"
-                {...form.register('tagIds')}
-              />
-            </Field>
-          </CardContent>
-        </Card>
-
-        <div className="flex gap-3">
-          <Button className="flex-1" disabled={mutation.isPending} type="submit">
-            {mutation.isPending ? '正在保存…' : '保存草稿'}
-          </Button>
-          <Link
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-background px-4 text-sm font-semibold shadow-sm transition-colors hover:border-primary/35 hover:bg-primary-soft"
-            href="/articles"
-            onClick={(event) => {
-              if (form.formState.isDirty && !window.confirm('当前文章尚未保存，确定要离开吗？')) {
-                event.preventDefault()
-              }
-            }}
-          >
-            取消
-          </Link>
-        </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>SEO</CardTitle>
+              <CardDescription>搜索和社交分享信息。</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <Field error={form.formState.errors.seoTitle?.message} id="seoTitle" label="SEO 标题">
+                <Input id="seoTitle" maxLength={240} {...form.register('seoTitle')} />
+              </Field>
+              <Field
+                error={form.formState.errors.seoDescription?.message}
+                id="seoDescription"
+                label="SEO 描述"
+              >
+                <textarea
+                  className={`${inputClassName} min-h-24 resize-y`}
+                  id="seoDescription"
+                  maxLength={500}
+                  {...form.register('seoDescription')}
+                />
+              </Field>
+              <Field
+                error={form.formState.errors.canonicalUrl?.message}
+                id="canonicalUrl"
+                label="规范链接"
+              >
+                <Input
+                  id="canonicalUrl"
+                  inputMode="url"
+                  placeholder="https://example.com/posts/article"
+                  {...form.register('canonicalUrl')}
+                />
+              </Field>
+            </CardContent>
+          </Card>
+        </aside>
       </div>
     </form>
   )
@@ -330,14 +279,12 @@ export function ArticleForm() {
 
 function Field({
   children,
-  description,
   error,
   id,
   label,
   required = false,
 }: {
   children: ReactNode
-  description?: string
   error?: string | undefined
   id: string
   label: string
@@ -354,23 +301,29 @@ function Field({
         <p className="text-xs text-destructive" id={`${id}-error`}>
           {error}
         </p>
-      ) : description ? (
-        <p className="text-xs leading-5 text-muted-foreground">{description}</p>
       ) : null}
     </div>
   )
 }
 
-function Checkbox({ label, ...props }: React.ComponentProps<'input'> & { label: string }) {
+function OptionButton({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean
+  label: string
+  onClick: () => void
+}) {
   return (
-    <label className="flex cursor-pointer items-center gap-3 text-sm font-medium">
-      <input
-        className="size-4 rounded border-input accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        type="checkbox"
-        {...props}
-      />
+    <button
+      aria-pressed={active}
+      className={`min-h-11 border-r border-border px-2 text-xs font-semibold last:border-r-0 ${active ? 'bg-primary text-primary-foreground' : 'bg-background text-muted-foreground hover:bg-primary-soft'}`}
+      onClick={onClick}
+      type="button"
+    >
       {label}
-    </label>
+    </button>
   )
 }
 

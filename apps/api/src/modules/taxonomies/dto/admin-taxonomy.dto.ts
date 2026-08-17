@@ -58,18 +58,13 @@ export class CreateCategoryDto {
   @IsUUID()
   parentId?: string
 
-  @ApiProperty({ maxLength: 160, pattern: SLUG_PATTERN.source, type: String })
+  @ApiProperty({ maxLength: 160, pattern: SLUG_PATTERN.source, required: false, type: String })
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @IsOptional()
   @IsString()
   @MaxLength(160)
   @Matches(SLUG_PATTERN)
-  slug!: string
-
-  @ApiProperty({ default: 0, required: false, type: Number })
-  @Type(() => Number)
-  @IsInt()
-  @IsOptional()
-  sortOrder?: number
+  slug?: string
 }
 
 export class UpdateCategoryDto {
@@ -123,12 +118,13 @@ export class CreateTagDto {
   @MaxLength(120)
   name!: string
 
-  @ApiProperty({ maxLength: 160, pattern: SLUG_PATTERN.source, type: String })
+  @ApiProperty({ maxLength: 160, pattern: SLUG_PATTERN.source, required: false, type: String })
   @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @IsOptional()
   @IsString()
   @MaxLength(160)
   @Matches(SLUG_PATTERN)
-  slug!: string
+  slug?: string
 }
 
 export class UpdateTagDto {

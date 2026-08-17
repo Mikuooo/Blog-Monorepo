@@ -80,13 +80,15 @@ describeWithDatabase('administration taxonomy API', () => {
 
   it('manages category trees and prevents cycles or deleting parents with children', async () => {
     const cookie = await login()
-    const root = await createCategory(cookie, { name: 'Engineering', slug: 'engineering' })
+    const root = await createCategory(cookie, { name: 'Engineering' })
     const child = await createCategory(cookie, {
       name: 'Frontend',
       parentId: root.id,
-      slug: 'frontend',
-      sortOrder: 10,
     })
+    const sibling = await createCategory(cookie, { name: 'Backend', parentId: root.id })
+    expect(root).toMatchObject({ slug: 'engineering', sortOrder: 0 })
+    expect(child).toMatchObject({ slug: 'frontend', sortOrder: 0 })
+    expect(sibling).toMatchObject({ slug: 'backend', sortOrder: 1 })
 
     const list = await request(app.getHttpServer())
       .get('/api/v1/admin/categories')
@@ -110,6 +112,12 @@ describeWithDatabase('administration taxonomy API', () => {
 
     await request(app.getHttpServer())
       .patch(`/api/v1/admin/categories/${child.id}`)
+      .set('Cookie', cookie)
+      .set('Origin', origin)
+      .send({ parentId: null })
+      .expect(200)
+    await request(app.getHttpServer())
+      .patch(`/api/v1/admin/categories/${sibling.id}`)
       .set('Cookie', cookie)
       .set('Origin', origin)
       .send({ parentId: null })
@@ -173,15 +181,15 @@ describeWithDatabase('administration taxonomy API', () => {
 
   async function createCategory(
     cookie: string,
-    body: { name: string; parentId?: string; slug: string; sortOrder?: number },
-  ): Promise<{ id: string }> {
+    body: { name: string; parentId?: string; slug?: string },
+  ): Promise<{ id: string; slug: string; sortOrder: number }> {
     const response = await request(app.getHttpServer())
       .post('/api/v1/admin/categories')
       .set('Cookie', cookie)
       .set('Origin', origin)
       .send(body)
       .expect(201)
-    return response.body as { id: string }
+    return response.body as { id: string; slug: string; sortOrder: number }
   }
 
   async function login(): Promise<string> {

@@ -1,27 +1,13 @@
 @import 'tailwindcss';
+@import 'tinymce/skins/ui/oxide/skin.css';
+@import '../styles/theme.css';
 @source '../../../../packages/ui/src';
 
 :root {
-  color-scheme: light;
-  --background: #f7faf9;
-  --foreground: #17211f;
-  --card: #ffffff;
-  --card-foreground: #17211f;
-  --primary: #39c5bb;
-  --primary-hover: #2daea5;
-  --primary-foreground: #072a27;
-  --primary-soft: #e6f8f6;
-  --secondary: #edf3f2;
-  --secondary-foreground: #273b38;
-  --muted: #f0f5f4;
-  --muted-foreground: #607370;
-  --destructive: #dc4545;
-  --border: #dce7e5;
-  --input: #cbdad7;
-  --ring: #39c5bb;
-  --success: #138a68;
-  --warning: #fff3cf;
-  --warning-foreground: #795b00;
+  --admin-sidebar-expanded-width: clamp(14rem, 11.25vw, 27rem);
+  --admin-sidebar-inline-padding: clamp(0.75rem, 0.45vw, 1.25rem);
+  --admin-sidebar-item-gap: clamp(0.5rem, 0.3vw, 0.75rem);
+  --admin-sidebar-item-height: clamp(3rem, 1.4vw, 3.5rem);
   --font-sans:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
@@ -31,21 +17,48 @@
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-hover: var(--primary-hover);
+  --color-primary-active: var(--primary-active);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary-soft: var(--primary-soft);
+  --color-primary-border: var(--primary-border);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-destructive-soft: var(--destructive-soft);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-warning-strong: var(--warning-strong);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-info-soft: var(--info-soft);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-active-foreground: var(--sidebar-active-foreground);
+  --color-sidebar-card: var(--sidebar-card);
+  --color-sidebar-card-border: var(--sidebar-card-border);
+  --color-chart-primary: var(--chart-primary);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
   --font-sans: var(--font-sans);
 }
 
@@ -65,6 +78,30 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   text-rendering: optimizeLegibility;
+}
+
+.article-editor-grid {
+  background-color: color-mix(in srgb, var(--background) 94%, var(--primary));
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--primary) 10%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--primary) 10%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 24px 24px;
+}
+
+.admin-content-scroll {
+  scrollbar-width: none;
+}
+
+.admin-content-scroll::-webkit-scrollbar {
+  display: none;
 }
 
 button,

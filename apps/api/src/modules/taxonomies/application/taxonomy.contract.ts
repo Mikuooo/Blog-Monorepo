@@ -41,8 +41,9 @@ export type CreateCategoryCommand = {
   name: string
   parentId?: string
   slug: string
-  sortOrder?: number
 }
+
+export type CreateCategoryInput = Omit<CreateCategoryCommand, 'slug'> & { slug?: string }
 
 export type UpdateCategoryCommand = {
   actorId: string
@@ -60,6 +61,8 @@ export type CreateTagCommand = {
   name: string
   slug: string
 }
+
+export type CreateTagInput = Omit<CreateTagCommand, 'slug'> & { slug?: string }
 
 export type UpdateTagCommand = Partial<Omit<CreateTagCommand, 'actorId'>> & {
   actorId: string

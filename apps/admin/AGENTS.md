@@ -789,7 +789,56 @@ project design tokens
 
 Do not introduce another major component/styling framework without approval.
 
-Avoid inconsistent one-off colors and arbitrary spacing.
+The Admin UI is token-first and theme-independent. Before changing theme tokens, shared primitives,
+page layout, charts, or visual states, read:
+
+```text
+docs/THEME_SYSTEM.md
+docs/UI_DESIGN_SYSTEM.md
+```
+
+Use the Tailwind utilities backed by the canonical CSS variables in
+`apps/admin/src/app/globals.css`, for example:
+
+```text
+bg-background
+bg-card
+text-foreground
+text-muted-foreground
+border-border
+bg-primary
+text-primary-foreground
+ring-ring
+```
+
+Business components must not hard-code a brand hue or use the primary color to communicate
+success, warning, danger, or information. Theme-specific literal values belong only in the active
+theme definition. Local literals are allowed for non-theme rendering internals such as canvas,
+shaders, and deliberately isolated decorative effects, but they must not leak into ordinary Admin
+components.
+
+Generic reusable primitives belong in `packages/ui`; Admin-specific compositions belong in
+`apps/admin/src/components` or the owning `apps/admin/src/features/<feature>` directory. Reuse the
+existing Button, Badge, Card, Input, Table, PageHeader, and shell patterns before creating variants.
+
+The active runtime baseline is the `miku` preset in
+`apps/admin/src/styles/themes/miku.css`. `apps/admin/src/styles/theme.css` is the theme entry point,
+`apps/admin/src/app/globals.css` maps its canonical variables into Tailwind utilities, and the root
+layout provides the matching `data-theme` and `data-color-scheme` attributes. Runtime switching UI
+is not implemented; do not assume users can change the fixed initial scheme yet.
+
+Prefer neutral surfaces, clear typography, an 8px-oriented spacing rhythm, light borders, and
+restrained shadows. Primary actions must be scarce, destructive actions must use destructive
+styling, status meaning must include text or icons, and focus indicators must remain visible.
+
+The Miku preset has one explicitly approved visual exception: solid `#39C5BB` brand surfaces use
+white text through `--primary-foreground` and `--sidebar-active-foreground`. This pair has an
+approximate WCAG contrast ratio of `2.13:1` and is not a general accessibility precedent. Do not use
+it for body copy, muted text, semantic status text, or controls outside the intentional solid-brand
+treatment. Any future palette should restore compliant contrast rather than inherit this exception.
+
+Avoid inconsistent one-off colors, arbitrary spacing, decorative gradients in routine business
+components, excessive cards, and subtly different copies of shared primitives.
 
 ---
 
@@ -926,6 +975,10 @@ Check:
 [ ] Pagination reviewed
 [ ] Responsive behavior checked
 [ ] Accessibility checked
+[ ] Admin design-system docs read for theme/UI work
+[ ] Semantic theme tokens used; no business-component brand literals added
+[ ] Brand and semantic status colors remain separate
+[ ] Existing shared primitives and feature patterns reused
 [ ] No sensitive browser storage
 [ ] Tests updated
 [ ] Typecheck/lint run

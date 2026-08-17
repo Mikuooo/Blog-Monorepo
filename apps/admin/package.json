@@ -18,12 +18,14 @@
     "@blog/ui": "workspace:*",
     "@hookform/resolvers": "^5.7.1",
     "@tanstack/react-query": "^5.101.4",
+    "@tinymce/tinymce-react": "^6.3.0",
     "echarts": "^6.1.0",
     "lucide-react": "^1.31.0",
     "next": "^16.3.0",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-hook-form": "^7.85.0",
+    "tinymce": "^8.8.2",
     "zod": "catalog:"
   },
   "devDependencies": {

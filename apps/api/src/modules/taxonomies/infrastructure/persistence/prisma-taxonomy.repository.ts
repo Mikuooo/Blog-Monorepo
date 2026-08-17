@@ -76,13 +76,17 @@ export class PrismaTaxonomyRepository implements TaxonomyRepository {
     try {
       return await this.prisma.client.$transaction(async (transaction) => {
         if (command.parentId) await requireCategory(transaction, command.parentId, true)
+        const lastSibling = await transaction.category.aggregate({
+          _max: { sortOrder: true },
+          where: { deletedAt: null, parentId: command.parentId ?? null },
+        })
         const category = await transaction.category.create({
           data: {
             description: emptyToNull(command.description),
             name: command.name,
             parentId: command.parentId ?? null,
             slug: command.slug,
-            sortOrder: command.sortOrder ?? 0,
+            sortOrder: (lastSibling._max.sortOrder ?? -1) + 1,
           },
           select: categorySelect,
         })

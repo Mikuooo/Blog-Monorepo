@@ -3497,15 +3497,10 @@
             "type": "string",
             "maxLength": 160,
             "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
-          },
-          "sortOrder": {
-            "type": "number",
-            "default": 0
           }
         },
         "required": [
-          "name",
-          "slug"
+          "name"
         ]
       },
       "UpdateCategoryDto": {
@@ -3637,8 +3632,7 @@
           }
         },
         "required": [
-          "name",
-          "slug"
+          "name"
         ]
       },
       "UpdateTagDto": {

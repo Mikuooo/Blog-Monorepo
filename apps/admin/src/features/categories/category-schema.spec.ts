@@ -23,7 +23,6 @@ describe('category form schema', () => {
       name: '工程实践',
       parentId: '123e4567-e89b-42d3-a456-426614174000',
       slug: 'engineering',
-      sortOrder: 10,
     })
     expect(toUpdateCategory({ ...values, parentId: '' }).parentId).toBeNull()
   })

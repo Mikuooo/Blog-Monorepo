@@ -34,10 +34,7 @@ export const articleFormSchema = z
       .max(240, '文章别名不能超过 240 个字符')
       .regex(slugPattern, '只能使用小写字母、数字和连字符，且不能以连字符开头或结尾'),
     summary: z.string().trim().max(5000, '摘要不能超过 5000 个字符'),
-    tagIds: z.string().refine((value) => {
-      const ids = splitTagIds(value)
-      return ids.length <= 50 && ids.every((id) => uuidPattern.test(id))
-    }, '标签最多 50 个，请使用有效 UUID 并以逗号或换行分隔'),
+    tagIds: z.array(z.string().regex(uuidPattern, '标签 ID 无效')).max(50, '标签最多选择 50 个'),
     title: z.string().trim().min(1, '请输入文章标题').max(240, '标题不能超过 240 个字符'),
     visibility: z.enum(['PUBLIC', 'PRIVATE', 'PASSWORD']),
   })
@@ -66,13 +63,13 @@ export const articleFormDefaults: ArticleFormValues = {
   seoTitle: '',
   slug: '',
   summary: '',
-  tagIds: '',
+  tagIds: [],
   title: '',
   visibility: 'PUBLIC',
 }
 
 export function toCreateArticleRequest(values: ArticleFormValues): CreateArticleRequest {
-  const tagIds = [...new Set(splitTagIds(values.tagIds))]
+  const tagIds = [...new Set(values.tagIds)]
 
   return {
     allowComment: values.allowComment,
@@ -101,13 +98,6 @@ export function slugifyTitle(value: string): string {
     .replace(/^-+|-+$/gu, '')
     .slice(0, 240)
     .replace(/-+$/u, '')
-}
-
-function splitTagIds(value: string): string[] {
-  return value
-    .split(/[\s,，]+/u)
-    .map((id) => id.trim())
-    .filter(Boolean)
 }
 
 function isHttpUrl(value: string): boolean {

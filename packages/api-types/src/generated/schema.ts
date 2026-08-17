@@ -766,9 +766,7 @@ export interface components {
             name: string;
             /** Format: uuid */
             parentId?: string;
-            slug: string;
-            /** @default 0 */
-            sortOrder: number;
+            slug?: string;
         };
         UpdateCategoryDto: {
             description?: string;
@@ -805,7 +803,7 @@ export interface components {
         CreateTagDto: {
             description?: string;
             name: string;
-            slug: string;
+            slug?: string;
         };
         UpdateTagDto: {
             description?: string;

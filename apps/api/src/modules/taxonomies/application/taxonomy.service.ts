@@ -1,10 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common'
+import { randomUUID } from 'node:crypto'
 
 import {
   TAXONOMY_REPOSITORY,
   type CategoryListItem,
-  type CreateCategoryCommand,
-  type CreateTagCommand,
+  type CreateCategoryInput,
+  type CreateTagInput,
   type TagListItem,
   type TaxonomyDeleteResult,
   type TaxonomyListQuery,
@@ -18,12 +19,18 @@ import {
 export class TaxonomyService {
   constructor(@Inject(TAXONOMY_REPOSITORY) private readonly repository: TaxonomyRepository) {}
 
-  createCategory(command: CreateCategoryCommand): Promise<CategoryListItem> {
-    return this.repository.createCategory(command)
+  createCategory(input: CreateCategoryInput): Promise<CategoryListItem> {
+    return this.repository.createCategory({
+      ...input,
+      slug: input.slug?.trim() || generateTaxonomySlug(input.name, 'category'),
+    })
   }
 
-  createTag(command: CreateTagCommand): Promise<TagListItem> {
-    return this.repository.createTag(command)
+  createTag(input: CreateTagInput): Promise<TagListItem> {
+    return this.repository.createTag({
+      ...input,
+      slug: input.slug?.trim() || generateTaxonomySlug(input.name, 'tag'),
+    })
   }
 
   deleteCategory(categoryId: string, actorId: string): Promise<TaxonomyDeleteResult> {
@@ -49,4 +56,15 @@ export class TaxonomyService {
   updateTag(command: UpdateTagCommand): Promise<TagListItem> {
     return this.repository.updateTag(command)
   }
+}
+
+export function generateTaxonomySlug(name: string, prefix: 'category' | 'tag'): string {
+  const normalized = name
+    .normalize('NFKD')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/gu, '-')
+    .replace(/^-+|-+$/gu, '')
+    .slice(0, 120)
+    .replace(/-+$/u, '')
+  return normalized || `${prefix}-${randomUUID()}`
 }

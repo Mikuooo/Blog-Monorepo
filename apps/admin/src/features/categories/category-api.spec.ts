@@ -51,7 +51,6 @@ describe('category API adapter', () => {
       createCategoryApi(() => client as unknown as BlogApiClient).create({
         name: 'Engineering',
         slug: 'engineering',
-        sortOrder: 0,
       }),
     ).rejects.toMatchObject({ code: 'CATEGORY_SLUG_EXISTS', status: 409 })
   })
