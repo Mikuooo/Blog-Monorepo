@@ -350,7 +350,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           >
             <Icon className="size-5" name="menu" />
           </Button>
-          <nav aria-label="面包屑" className="min-w-0 flex-1">
+          <nav aria-label="面包屑" className="hidden min-w-0 flex-1 overflow-hidden md:block">
             <svg aria-hidden="true" className="absolute size-0" focusable="false">
               <defs>
                 <clipPath id="breadcrumb-first-shape" clipPathUnits="objectBoundingBox">
@@ -361,7 +361,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 </clipPath>
               </defs>
             </svg>
-            <ol className="inline-flex max-w-full items-center py-1 text-sm">
+            <ol className="inline-flex max-w-full items-center overflow-hidden py-1 text-sm">
               <li className="relative z-10 shrink-0">
                 {isDashboard ? (
                   <span
@@ -494,10 +494,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <main
             className={
               isDashboard
-                ? 'w-full max-w-none pt-4'
-                : `mx-auto max-w-[1600px] ${
-                    inset ? 'px-1 pb-5 pt-7 sm:px-2 sm:pb-6 sm:pt-8 lg:px-4' : 'p-4 sm:p-6 lg:p-8'
-                  }`
+                ? 'w-full max-w-none py-4'
+                : inset
+                  ? 'w-full max-w-none py-6 sm:py-8'
+                  : 'mx-auto max-w-[1600px] p-4 sm:p-6 lg:p-8'
             }
             id="main-content"
           >

@@ -54,10 +54,10 @@ const dashboardTrend: ReadonlyArray<DashboardTrendPoint> = [
 
 export default function DashboardPage() {
   return (
-    <div className="grid h-[calc(100dvh-7rem)] min-w-0 grid-rows-[18rem_minmax(0,1fr)] gap-4">
+    <div className="grid min-w-0 gap-4 lg:h-[calc(100dvh-7rem)] lg:grid-rows-[18rem_minmax(0,1fr)]">
       <section
         aria-label="工作台摘要"
-        className="grid min-h-0 grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,1fr)] gap-4"
+        className="grid min-h-0 auto-rows-[18rem] grid-cols-1 gap-4 md:grid-cols-2 lg:auto-rows-auto lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)_minmax(0,1fr)]"
       >
         <Card className="h-full min-h-0 min-w-0 gap-0 py-0">
           <CardContent className="flex h-full flex-col justify-center px-5 py-4 sm:px-6">
@@ -73,9 +73,15 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
         <DashboardTaskSwitcher />
-        <Card className="h-full min-h-0 min-w-0 py-0" aria-label="预留区域" />
+        <Card
+          className="hidden h-full min-h-0 min-w-0 py-0 lg:block"
+          aria-label="预留区域"
+        />
       </section>
-      <section className="min-h-0 min-w-0" aria-label="数据总览">
+      <section
+        className="h-[26rem] min-h-0 min-w-0 sm:h-[30rem] lg:h-auto"
+        aria-label="数据总览"
+      >
         <DashboardOverviewChart data={dashboardTrend} />
       </section>
     </div>
