@@ -36,6 +36,23 @@ export function createArticleApi(getClient: () => BlogApiClient) {
       }
     },
 
+    async publish(articleId: string, expectedVersion: number): Promise<ArticleCommandResponse> {
+      try {
+        const { data, error, response } = await getClient().POST(
+          '/api/v1/admin/articles/{articleId}/publish',
+          {
+            body: { expectedVersion },
+            credentials: 'include',
+            params: { path: { articleId } },
+          },
+        )
+        if (!response.ok || !data) throw toArticleApiError(error, response)
+        return data
+      } catch (error) {
+        throw normalizeRequestError(error)
+      }
+    },
+
     async list(query: ArticleListQuery, signal?: AbortSignal): Promise<ArticleListResponse> {
       try {
         const { data, error, response } = await getClient().GET('/api/v1/admin/articles', {
@@ -64,6 +81,7 @@ const articleApi = createArticleApi(getBrowserApiClient)
 
 export const createArticle = articleApi.create
 export const listArticles = articleApi.list
+export const publishArticle = articleApi.publish
 
 function toArticleApiError(
   error: ArticleErrorResponse | undefined,

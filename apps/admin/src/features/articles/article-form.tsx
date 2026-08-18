@@ -12,7 +12,7 @@ import { Controller, useForm, useWatch } from 'react-hook-form'
 
 import { useCurrentUser } from '@/features/auth/auth-query'
 
-import { ArticleApiError, createArticle } from './article-api'
+import { ArticleApiError, createArticle, publishArticle } from './article-api'
 import { ArticleCoverField } from './article-cover-field'
 import { articleKeys } from './article-query'
 import { ArticleRichTextEditor } from './article-rich-text-editor'
@@ -28,6 +28,18 @@ import { CategoryCascadeField, TagPickerField } from './article-taxonomy-fields'
 const inputClassName =
   'w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus:border-ring focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50'
 
+type SubmitIntent = 'draft' | 'publish'
+
+class ArticlePublishAfterCreateError extends Error {
+  constructor(
+    readonly articleId: string,
+    options: ErrorOptions,
+  ) {
+    super('ARTICLE_PUBLISH_AFTER_CREATE_FAILED', options)
+    this.name = 'ArticlePublishAfterCreateError'
+  }
+}
+
 export function ArticleForm() {
   const currentUser = useCurrentUser()
   const queryClient = useQueryClient()
@@ -42,14 +54,31 @@ export function ArticleForm() {
     name: ['allowComment', 'isPinned', 'isFeatured'],
   })
   const mutation = useMutation({
-    mutationFn: createArticle,
-    onSuccess: async ({ articleId }) => {
+    mutationFn: async ({ intent, values }: { intent: SubmitIntent; values: ArticleFormValues }) => {
+      const draft = await createArticle(toCreateArticleRequest(values))
+      if (intent === 'draft') return { intent, result: draft }
+
+      try {
+        const result = await publishArticle(draft.articleId, draft.version)
+        return { intent, result }
+      } catch (error) {
+        throw new ArticlePublishAfterCreateError(draft.articleId, { cause: error })
+      }
+    },
+    onError: async (error) => {
+      if (error instanceof ArticlePublishAfterCreateError) {
+        await queryClient.invalidateQueries({ queryKey: articleKeys.all })
+      }
+    },
+    onSuccess: async ({ result }) => {
       await queryClient.invalidateQueries({ queryKey: articleKeys.all })
-      router.push(`/articles?created=${encodeURIComponent(articleId)}`)
+      router.push(`/articles?created=${encodeURIComponent(result.articleId)}`)
       router.refresh()
     },
   })
   const canCreate = currentUser.data?.permissions.includes('article.create') ?? false
+  const canPublish = currentUser.data?.permissions.includes('article.publish') ?? false
+  const submitIntent = mutation.variables?.intent
 
   useEffect(() => {
     if (!form.formState.isDirty || mutation.isSuccess) return
@@ -74,18 +103,8 @@ export function ArticleForm() {
   return (
     <form
       noValidate
-      onSubmit={form.handleSubmit((values) => mutation.mutate(toCreateArticleRequest(values)))}
+      onSubmit={form.handleSubmit((values) => mutation.mutate({ intent: 'draft', values }))}
     >
-      <div className="sticky top-3 z-10 mb-5 flex items-center justify-between rounded-2xl border border-border bg-background/92 px-4 py-3 shadow-sm backdrop-blur">
-        <div>
-          <p className="text-sm font-semibold">新建文章</p>
-          <p className="text-xs text-muted-foreground">所有内容将保存为草稿</p>
-        </div>
-        <Button disabled={mutation.isPending} type="submit">
-          {mutation.isPending ? '正在保存…' : '保存草稿'}
-        </Button>
-      </div>
-
       {mutation.isError ? (
         <p
           className="mb-5 rounded-lg border border-destructive/25 bg-destructive-soft px-4 py-3 text-sm text-destructive"
@@ -95,94 +114,144 @@ export function ArticleForm() {
         </p>
       ) : null}
 
-      <div className="grid items-start gap-5 2xl:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="article-editor-grid min-w-0 space-y-5 rounded-2xl border border-border p-4 sm:p-6">
-          <div className="grid gap-4 lg:grid-cols-[3fr_1fr_1fr]">
-            <Field
-              error={form.formState.errors.title?.message}
-              id="title"
-              label="文章标题"
-              required
-            >
-              <Input
-                id="title"
-                maxLength={240}
-                placeholder="输入文章标题"
-                {...form.register('title', {
-                  onBlur: (event) => {
-                    if (!form.getValues('slug'))
-                      form.setValue('slug', slugifyTitle(event.target.value), {
-                        shouldValidate: true,
-                      })
-                  },
-                })}
-              />
-            </Field>
-            <Field error={form.formState.errors.slug?.message} id="slug" label="文章别名" required>
-              <Input
-                id="slug"
-                maxLength={240}
-                placeholder="article-slug"
-                {...form.register('slug')}
-              />
-            </Field>
-            <Field error={form.formState.errors.visibility?.message} id="visibility" label="可见性">
-              <select
-                className={`${inputClassName} h-10`}
-                id="visibility"
-                {...form.register('visibility')}
-              >
-                <option value="PUBLIC">公开</option>
-                <option value="PRIVATE">私密</option>
-                <option value="PASSWORD">密码访问</option>
-              </select>
-            </Field>
-          </div>
+      <div className="grid items-start gap-5 xl:h-[calc(100dvh-15rem)] xl:min-h-0 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-stretch 2xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="min-w-0 space-y-5 xl:h-full xl:overflow-y-auto xl:overscroll-contain xl:pr-2">
+          <Card>
+            <CardContent className="space-y-5 p-4 sm:p-6">
+              <div className="grid gap-4 lg:grid-cols-[3fr_1fr_1fr]">
+                <Field
+                  error={form.formState.errors.title?.message}
+                  id="title"
+                  label="文章标题"
+                  required
+                >
+                  <Input
+                    id="title"
+                    maxLength={240}
+                    placeholder="输入文章标题"
+                    {...form.register('title', {
+                      onBlur: (event) => {
+                        if (!form.getValues('slug'))
+                          form.setValue('slug', slugifyTitle(event.target.value), {
+                            shouldValidate: true,
+                          })
+                      },
+                    })}
+                  />
+                </Field>
+                <Field
+                  error={form.formState.errors.slug?.message}
+                  id="slug"
+                  label="文章别名"
+                  required
+                >
+                  <Input
+                    id="slug"
+                    maxLength={240}
+                    placeholder="article-slug"
+                    {...form.register('slug')}
+                  />
+                </Field>
+                <Field
+                  error={form.formState.errors.visibility?.message}
+                  id="visibility"
+                  label="可见性"
+                >
+                  <select
+                    className={`${inputClassName} h-10`}
+                    id="visibility"
+                    {...form.register('visibility')}
+                  >
+                    <option value="PUBLIC">公开</option>
+                    <option value="PRIVATE">私密</option>
+                    <option value="PASSWORD">密码访问</option>
+                  </select>
+                </Field>
+              </div>
 
-          {visibility === 'PASSWORD' ? (
-            <Field
-              error={form.formState.errors.password?.message}
-              id="password"
-              label="访问密码"
-              required
-            >
-              <Input
-                id="password"
-                maxLength={128}
-                placeholder="至少 8 位"
-                type="password"
-                {...form.register('password')}
-              />
-            </Field>
-          ) : null}
+              {visibility === 'PASSWORD' ? (
+                <Field
+                  error={form.formState.errors.password?.message}
+                  id="password"
+                  label="访问密码"
+                  required
+                >
+                  <Input
+                    id="password"
+                    maxLength={128}
+                    placeholder="至少 8 位"
+                    type="password"
+                    {...form.register('password')}
+                  />
+                </Field>
+              ) : null}
 
-          <Field error={form.formState.errors.summary?.message} id="summary" label="摘要">
-            <textarea
-              className={`${inputClassName} min-h-24 resize-y`}
-              id="summary"
-              maxLength={5000}
-              placeholder="用于列表与分享卡片"
-              {...form.register('summary')}
-            />
-          </Field>
-
-          <Field error={form.formState.errors.content?.message} id="content" label="正文" required>
-            <Controller
-              control={form.control}
-              name="content"
-              render={({ field, fieldState }) => (
-                <ArticleRichTextEditor
-                  initialValue={field.value}
-                  invalid={Boolean(fieldState.error)}
-                  onBlur={field.onBlur}
-                  onChange={(value) => field.onChange(value)}
+              <Field error={form.formState.errors.summary?.message} id="summary" label="摘要">
+                <textarea
+                  className={`${inputClassName} min-h-24 resize-y`}
+                  id="summary"
+                  maxLength={5000}
+                  placeholder="用于列表与分享卡片"
+                  {...form.register('summary')}
                 />
-              )}
-            />
-          </Field>
+              </Field>
+            </CardContent>
+          </Card>
+
+          <section aria-labelledby="article-content-heading">
+            <div className="mb-3 flex items-center gap-1.5 px-1">
+              <h2 className="text-sm font-semibold" id="article-content-heading">
+                正文
+              </h2>
+              <span className="text-destructive" aria-hidden="true">
+                *
+              </span>
+            </div>
+            <div className="article-editor-grid rounded-2xl border border-border p-3 sm:p-4">
+              <Controller
+                control={form.control}
+                name="content"
+                render={({ field, fieldState }) => (
+                  <>
+                    <ArticleRichTextEditor
+                      initialValue={field.value}
+                      invalid={Boolean(fieldState.error)}
+                      onBlur={field.onBlur}
+                      onChange={(value) => field.onChange(value)}
+                    />
+                    {fieldState.error ? (
+                      <p className="mt-3 text-xs text-destructive" id="content-error">
+                        {fieldState.error.message}
+                      </p>
+                    ) : null}
+                  </>
+                )}
+              />
+            </div>
+          </section>
         </div>
 
-        <aside className="space-y-5 2xl:sticky 2xl:top-24">
+        <aside className="space-y-5 xl:h-full xl:overflow-y-auto xl:overscroll-contain xl:pl-1 xl:pr-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>发布操作</CardTitle>
+              <CardDescription>保存为草稿，或创建后立即发布。</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+              <Button disabled={mutation.isPending} type="submit" variant="outline">
+                {mutation.isPending && submitIntent === 'draft' ? '正在保存…' : '保存草稿'}
+              </Button>
+              <Button
+                disabled={mutation.isPending || !canPublish}
+                onClick={form.handleSubmit((values) => mutation.mutate({ intent: 'publish', values }))}
+                title={canPublish ? '创建文章并立即发布' : '当前账号缺少 article.publish 权限'}
+                type="button"
+              >
+                {mutation.isPending && submitIntent === 'publish' ? '正在发布…' : '发布'}
+              </Button>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>文章设置</CardTitle>
@@ -328,6 +397,8 @@ function OptionButton({
 }
 
 export function articleErrorMessage(error: unknown): string {
+  if (error instanceof ArticlePublishAfterCreateError)
+    return '草稿已保存，但发布失败。请返回文章列表继续处理，避免重复创建。'
   if (!(error instanceof ArticleApiError)) return '文章保存失败，请稍后重试。'
   if (error.code === 'ARTICLE_SLUG_EXISTS') return '文章别名已被使用，请更换后重试。'
   if (error.code === 'ARTICLE_PASSWORD_REQUIRED') return '密码可见文章必须设置访问密码。'

@@ -45,6 +45,29 @@ describe('administration article API client', () => {
     })
   })
 
+  it('publishes an article with optimistic concurrency and cookie credentials', async () => {
+    const client = createClientStub()
+    const publishedResponse = {
+      ...commandResponse,
+      publishedAt: '2026-08-18T08:00:00.000Z',
+      status: 'PUBLISHED' as const,
+      version: 2,
+    }
+    client.POST.mockResolvedValue({ data: publishedResponse, response: jsonResponse(200) })
+
+    await expect(
+      createArticleApi(() => client as unknown as BlogApiClient).publish(
+        commandResponse.articleId,
+        commandResponse.version,
+      ),
+    ).resolves.toEqual(publishedResponse)
+    expect(client.POST).toHaveBeenCalledWith('/api/v1/admin/articles/{articleId}/publish', {
+      body: { expectedVersion: commandResponse.version },
+      credentials: 'include',
+      params: { path: { articleId: commandResponse.articleId } },
+    })
+  })
+
   it('preserves API error codes and normalizes network failures', async () => {
     const conflictClient = createClientStub()
     conflictClient.POST.mockResolvedValue({
