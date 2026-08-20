@@ -35,6 +35,14 @@ export type TaxonomyListResult<T> = {
   totalPages: number
 }
 
+export type PublicTaxonomyItem = {
+  articleCount: number
+  description: string | null
+  id: string
+  name: string
+  slug: string
+}
+
 export type CreateCategoryCommand = {
   actorId: string
   description?: string
@@ -80,6 +88,8 @@ export interface TaxonomyRepository {
   deleteTag(tagId: string, actorId: string): Promise<TaxonomyDeleteResult>
   listCategories(query: TaxonomyListQuery): Promise<TaxonomyListResult<CategoryListItem>>
   listTags(query: TaxonomyListQuery): Promise<TaxonomyListResult<TagListItem>>
+  listPublicCategories(): Promise<PublicTaxonomyItem[]>
+  listPublicTags(): Promise<PublicTaxonomyItem[]>
   updateCategory(command: UpdateCategoryCommand): Promise<CategoryListItem>
   updateTag(command: UpdateTagCommand): Promise<TagListItem>
 }

@@ -77,9 +77,53 @@ export type AdminArticleListResult = {
   totalPages: number
 }
 
+export type PublicArticleListQuery = {
+  categorySlug?: string
+  keyword?: string
+  page: number
+  pageSize: number
+  tagSlug?: string
+}
+
+export type PublicArticleListItem = {
+  author: Pick<ArticleAuthorSummary, 'displayName' | 'username'>
+  category: ArticleCategorySummary | null
+  cover: { height: number | null; url: string; width: number | null } | null
+  id: string
+  isFeatured: boolean
+  isPinned: boolean
+  publishedAt: string
+  readingTime: number
+  slug: string
+  summary: string | null
+  tags: ArticleTagSummary[]
+  title: string
+}
+
+export type PublicArticleDetail = PublicArticleListItem & {
+  allowComment: boolean
+  canonicalUrl: string | null
+  content: string
+  contentHtml: string | null
+  seoDescription: string | null
+  seoTitle: string | null
+  updatedAt: string
+  wordCount: number
+}
+
+export type PublicArticleListResult = {
+  items: PublicArticleListItem[]
+  page: number
+  pageSize: number
+  total: number
+  totalPages: number
+}
+
 export const ARTICLE_QUERY_REPOSITORY = Symbol('ARTICLE_QUERY_REPOSITORY')
 
 export interface ArticleQueryRepository {
   findAdminArticleById(articleId: string): Promise<AdminArticleDetail | null>
   findAdminArticles(query: AdminArticleListQuery): Promise<AdminArticleListResult>
+  findPublicArticleBySlug(slug: string): Promise<PublicArticleDetail | null>
+  findPublicArticles(query: PublicArticleListQuery): Promise<PublicArticleListResult>
 }

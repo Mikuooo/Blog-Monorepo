@@ -9,12 +9,14 @@ import { ARTICLE_QUERY_REPOSITORY } from './application/article-query.contract.j
 import { AdminArticleQueryService } from './application/admin-article-query.service.js'
 import { ArticlesService } from './application/articles.service.js'
 import { AdminArticlesController } from './controllers/admin-articles.controller.js'
+import { PublicArticlesController } from './controllers/public-articles.controller.js'
+import { AdminArticleRevisionsController } from './controllers/admin-article-revisions.controller.js'
 import { PrismaAdminArticleCommandRepository } from './infrastructure/persistence/prisma-admin-article-command.repository.js'
 import { PrismaArticlePublicationUnitOfWork } from './infrastructure/persistence/prisma-article-publication.unit-of-work.js'
 import { PrismaArticleQueryRepository } from './infrastructure/persistence/prisma-article-query.repository.js'
 
 @Module({
-  controllers: [AdminArticlesController],
+  controllers: [AdminArticlesController, PublicArticlesController, AdminArticleRevisionsController],
   exports: [AdminArticleQueryService, ArticlesService],
   imports: [AuthModule, PrismaInfrastructureModule],
   providers: [

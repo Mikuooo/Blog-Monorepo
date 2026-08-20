@@ -24,6 +24,7 @@ export type CreateSessionInput = {
   userAgent?: string
   userId: string
 }
+export type SessionSummary = { id: string; createdAt: string; expiresAt: string; ip: string | null; lastSeenAt: string | null; userAgent: string | null }
 
 export const AUTH_REPOSITORY = Symbol('AUTH_REPOSITORY')
 
@@ -32,4 +33,8 @@ export interface AuthRepository {
   findSessionByTokenHash(tokenHash: string, now: Date): Promise<AuthenticatedSession | null>
   findUserForLogin(identifier: string): Promise<LoginUserRecord | null>
   revokeSession(sessionId: string, revokedAt: Date): Promise<void>
+  listSessions(userId: string, now: Date): Promise<SessionSummary[]>
+  revokeOtherSessions(userId: string, currentSessionId: string, revokedAt: Date): Promise<void>
+  updateProfile(userId: string, displayName: string): Promise<AuthenticatedUser>
+  updatePassword(userId: string, passwordHash: string, currentSessionId: string, revokedAt: Date): Promise<void>
 }

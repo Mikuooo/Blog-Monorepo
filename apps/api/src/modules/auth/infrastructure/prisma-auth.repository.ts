@@ -17,7 +17,7 @@ export class PrismaAuthRepository implements AuthRepository {
       select: userSelect,
       where: {
         deletedAt: null,
-        OR: [{ email: identifier }, { username: identifier }],
+        OR: [{ email: identifier }, { username: identifier }, { id: identifier }],
       },
     })
     return user ? mapLoginUser(user) : null
@@ -62,6 +62,10 @@ export class PrismaAuthRepository implements AuthRepository {
       where: { id: sessionId, revokedAt: null },
     })
   }
+  async listSessions(userId: string, now: Date) { const rows = await this.prisma.client.loginSession.findMany({ orderBy: { createdAt: 'desc' }, select: { id: true, createdAt: true, expiresAt: true, ip: true, lastSeenAt: true, userAgent: true }, where: { userId, revokedAt: null, expiresAt: { gt: now } } }); return rows.map((row) => ({ ...row, createdAt: row.createdAt.toISOString(), expiresAt: row.expiresAt.toISOString(), lastSeenAt: row.lastSeenAt?.toISOString() ?? null })) }
+  async revokeOtherSessions(userId: string, currentSessionId: string, revokedAt: Date): Promise<void> { await this.prisma.client.loginSession.updateMany({ data: { revokedAt }, where: { userId, id: { not: currentSessionId }, revokedAt: null } }) }
+  async updateProfile(userId: string, displayName: string) { return mapAuthenticatedUser(await this.prisma.client.user.update({ data: { displayName }, select: userSelect, where: { id: userId } })) }
+  async updatePassword(userId: string, passwordHash: string, currentSessionId: string, revokedAt: Date): Promise<void> { await this.prisma.client.$transaction([this.prisma.client.user.update({ data: { passwordHash }, where: { id: userId } }), this.prisma.client.loginSession.updateMany({ data: { revokedAt }, where: { userId, id: { not: currentSessionId }, revokedAt: null } })]) }
 }
 
 const userSelect = {

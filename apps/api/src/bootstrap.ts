@@ -12,6 +12,10 @@ import { AuthModule } from './modules/auth/auth.module.js'
 import { sessionCookieName } from './modules/auth/auth-cookie.js'
 import { trustedOrigins } from './modules/auth/guards/trusted-origin.guard.js'
 import { SettingsModule } from './modules/settings/settings.module.js'
+import { MediaModule } from './modules/media/media.module.js'
+import { CommentsModule } from './modules/comments/comments.module.js'
+import { ContentModule } from './modules/content/content.module.js'
+import { DashboardModule } from './modules/dashboard/dashboard.module.js'
 import { InternalSystemModule } from './modules/system/internal-system.module.js'
 import { SystemModule } from './modules/system/system.module.js'
 import { TaxonomiesModule } from './modules/taxonomies/taxonomies.module.js'
@@ -60,6 +64,10 @@ export function createPublicOpenApiDocument(app: Awaited<ReturnType<typeof NestF
       TaxonomiesModule,
       AccessControlModule,
       SettingsModule,
+      MediaModule,
+      CommentsModule,
+      ContentModule,
+      DashboardModule,
     ],
   })
 }

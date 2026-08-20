@@ -7,6 +7,10 @@ import type {
   AdminArticleListQuery,
   AdminArticleListResult,
   ArticleQueryRepository,
+  PublicArticleDetail,
+  PublicArticleListItem,
+  PublicArticleListQuery,
+  PublicArticleListResult,
 } from '../../application/article-query.contract.js'
 
 @Injectable()
@@ -98,6 +102,36 @@ export class PrismaArticleQueryRepository implements ArticleQueryRepository {
       wordCount: article.wordCount,
     }
   }
+
+  async findPublicArticles(query: PublicArticleListQuery): Promise<PublicArticleListResult> {
+    const keyword = query.keyword?.trim()
+    const where = {
+      deletedAt: null,
+      publishedAt: { lte: new Date() },
+      status: 'PUBLISHED' as const,
+      visibility: 'PUBLIC' as const,
+      ...(query.categorySlug ? { category: { slug: query.categorySlug } } : {}),
+      ...(query.tagSlug ? { tags: { some: { tag: { slug: query.tagSlug } } } } : {}),
+      ...(keyword ? { OR: [
+        { title: { contains: keyword, mode: 'insensitive' as const } },
+        { summary: { contains: keyword, mode: 'insensitive' as const } },
+      ] } : {}),
+    }
+    const [articles, total] = await Promise.all([
+      this.prisma.client.article.findMany({ orderBy: [{ isPinned: 'desc' }, { publishedAt: 'desc' }, { id: 'desc' }], select: publicListSelect, skip: (query.page - 1) * query.pageSize, take: query.pageSize, where }),
+      this.prisma.client.article.count({ where }),
+    ])
+    return { items: articles.map(mapPublicListItem), page: query.page, pageSize: query.pageSize, total, totalPages: total === 0 ? 0 : Math.ceil(total / query.pageSize) }
+  }
+
+  async findPublicArticleBySlug(slug: string): Promise<PublicArticleDetail | null> {
+    const article = await this.prisma.client.article.findFirst({
+      select: { ...publicListSelect, allowComment: true, canonicalUrl: true, content: true, contentHtml: true, seoDescription: true, seoTitle: true, updatedAt: true, wordCount: true },
+      where: { deletedAt: null, publishedAt: { lte: new Date() }, slug, status: 'PUBLISHED', visibility: 'PUBLIC' },
+    })
+    if (!article) return null
+    return { ...mapPublicListItem(article), allowComment: article.allowComment, canonicalUrl: article.canonicalUrl, content: article.content, contentHtml: article.contentHtml, seoDescription: article.seoDescription, seoTitle: article.seoTitle, updatedAt: article.updatedAt.toISOString(), wordCount: article.wordCount }
+  }
 }
 
 const listSelect = {
@@ -114,6 +148,10 @@ const listSelect = {
   updatedAt: true,
   viewCount: true,
   visibility: true,
+} as const
+
+const publicListSelect = {
+  author: { select: { displayName: true, username: true } }, category: { select: { id: true, name: true, slug: true } }, cover: { select: { height: true, url: true, width: true } }, id: true, isFeatured: true, isPinned: true, publishedAt: true, readingTime: true, slug: true, summary: true, tags: { select: { tag: { select: { id: true, name: true, slug: true } } } }, title: true,
 } as const
 
 type ListRow = {
@@ -148,4 +186,9 @@ function mapListItem(article: ListRow): AdminArticleListItem {
     viewCount: article.viewCount.toString(),
     visibility: article.visibility,
   }
+}
+
+function mapPublicListItem(article: { author: { displayName: string; username: string }; category: { id: string; name: string; slug: string } | null; cover: { height: number | null; url: string; width: number | null } | null; id: string; isFeatured: boolean; isPinned: boolean; publishedAt: Date | null; readingTime: number; slug: string; summary: string | null; tags: Array<{ tag: { id: string; name: string; slug: string } }>; title: string }): PublicArticleListItem {
+  if (!article.publishedAt) throw new Error('Published article is missing publishedAt')
+  return { author: article.author, category: article.category, cover: article.cover, id: article.id, isFeatured: article.isFeatured, isPinned: article.isPinned, publishedAt: article.publishedAt.toISOString(), readingTime: article.readingTime, slug: article.slug, summary: article.summary, tags: article.tags.map(({ tag }) => tag).sort((left, right) => left.name.localeCompare(right.name)), title: article.title }
 }

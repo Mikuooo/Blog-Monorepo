@@ -142,6 +142,84 @@
         "tags": [
           "auth"
         ]
+      },
+      "patch": {
+        "operationId": "updateCurrentUser",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/sessions": {
+      "get": {
+        "operationId": "listSessions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/sessions/others": {
+      "delete": {
+        "operationId": "revokeOtherSessions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/v1/auth/change-password": {
+      "post": {
+        "operationId": "changePassword",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "",
+        "tags": [
+          "auth"
+        ]
       }
     },
     "/api/v1/admin/users": {
@@ -1449,6 +1527,115 @@
         ]
       }
     },
+    "/api/v1/public/articles": {
+      "get": {
+        "operationId": "listPublicArticles",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicArticleListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "List published public articles",
+        "tags": [
+          "public-articles"
+        ]
+      }
+    },
+    "/api/v1/public/articles/search": {
+      "get": {
+        "operationId": "searchPublicArticles",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicArticleListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Search published public articles",
+        "tags": [
+          "public-articles"
+        ]
+      }
+    },
+    "/api/v1/public/articles/{slug}": {
+      "get": {
+        "operationId": "getPublicArticle",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicArticleDetailResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": ""
+          }
+        },
+        "summary": "Get a published public article",
+        "tags": [
+          "public-articles"
+        ]
+      }
+    },
+    "/api/v1/admin/articles/{articleId}/revisions": {
+      "get": {
+        "operationId": "listAdminArticleRevisions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "",
+        "tags": [
+          "admin-article-revisions"
+        ]
+      }
+    },
+    "/api/v1/admin/articles/{articleId}/revisions/{revisionId}": {
+      "get": {
+        "operationId": "getAdminArticleRevision",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "",
+        "tags": [
+          "admin-article-revisions"
+        ]
+      }
+    },
     "/api/v1/admin/settings": {
       "get": {
         "operationId": "getAdminSettings",
@@ -1558,6 +1745,301 @@
         "summary": "Update system settings",
         "tags": [
           "admin-settings"
+        ]
+      }
+    },
+    "/api/v1/admin/media/upload-url": {
+      "post": {
+        "operationId": "createAdminMediaUploadUrl",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaUploadUrlResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "",
+        "tags": [
+          "admin-media"
+        ]
+      }
+    },
+    "/api/v1/admin/media/complete": {
+      "post": {
+        "operationId": "completeAdminMediaUpload",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "",
+        "tags": [
+          "admin-media"
+        ]
+      }
+    },
+    "/api/v1/admin/media": {
+      "get": {
+        "operationId": "listAdminMedia",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaListResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "",
+        "tags": [
+          "admin-media"
+        ]
+      }
+    },
+    "/api/v1/admin/media/{mediaId}/download-url": {
+      "get": {
+        "operationId": "getAdminMediaDownloadUrl",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaDownloadUrlResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "",
+        "tags": [
+          "admin-media"
+        ]
+      }
+    },
+    "/api/v1/admin/media/{mediaId}": {
+      "get": {
+        "operationId": "getAdminMedia",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "",
+        "tags": [
+          "admin-media"
+        ]
+      },
+      "delete": {
+        "operationId": "deleteAdminMedia",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "",
+        "tags": [
+          "admin-media"
+        ]
+      }
+    },
+    "/api/v1/admin/comments": {
+      "get": {
+        "operationId": "listAdminComments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "",
+        "tags": [
+          "admin-comments"
+        ]
+      }
+    },
+    "/api/v1/admin/comments/{commentId}/status": {
+      "patch": {
+        "operationId": "updateAdminCommentStatus",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "",
+        "tags": [
+          "admin-comments"
+        ]
+      }
+    },
+    "/api/v1/admin/comments/{commentId}": {
+      "delete": {
+        "operationId": "AdminCommentsController_delete_v1",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "tags": [
+          "admin-comments"
+        ]
+      }
+    },
+    "/api/v1/public/articles/{articleId}/comments": {
+      "get": {
+        "operationId": "listPublicComments",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "",
+        "tags": [
+          "comments"
+        ]
+      }
+    },
+    "/api/v1/public/pages/{slug}": {
+      "get": {
+        "operationId": "getPublicPage",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "",
+        "tags": [
+          "public-content"
+        ]
+      }
+    },
+    "/api/v1/public/menus/{code}": {
+      "get": {
+        "operationId": "getPublicMenu",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "",
+        "tags": [
+          "public-content"
+        ]
+      }
+    },
+    "/api/v1/public/links": {
+      "get": {
+        "operationId": "listPublicLinks",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "",
+        "tags": [
+          "public-content"
+        ]
+      }
+    },
+    "/api/v1/admin/dashboard/overview": {
+      "get": {
+        "operationId": "getAdminDashboardOverview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "session": []
+          }
+        ],
+        "summary": "",
+        "tags": [
+          "admin-dashboard"
         ]
       }
     },
@@ -2070,6 +2552,56 @@
         "summary": "Delete a tag",
         "tags": [
           "admin-tags"
+        ]
+      }
+    },
+    "/api/v1/public/categories": {
+      "get": {
+        "operationId": "listPublicCategories",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicTaxonomyItemDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": [
+          "public-taxonomies"
+        ]
+      }
+    },
+    "/api/v1/public/tags": {
+      "get": {
+        "operationId": "listPublicTags",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicTaxonomyItemDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "",
+        "tags": [
+          "public-taxonomies"
         ]
       }
     }
@@ -3181,6 +3713,194 @@
           "scheduledAt"
         ]
       },
+      "PublicArticleResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "nullable": true
+          },
+          "publishedAt": {
+            "type": "string"
+          },
+          "readingTime": {
+            "type": "number"
+          },
+          "isPinned": {
+            "type": "boolean"
+          },
+          "isFeatured": {
+            "type": "boolean"
+          },
+          "author": {
+            "type": "object"
+          },
+          "category": {
+            "type": "object",
+            "nullable": true
+          },
+          "cover": {
+            "type": "object",
+            "nullable": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "slug",
+          "summary",
+          "publishedAt",
+          "readingTime",
+          "isPinned",
+          "isFeatured",
+          "author",
+          "category",
+          "cover",
+          "tags"
+        ]
+      },
+      "PublicArticleListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicArticleResponseDto"
+            }
+          },
+          "page": {
+            "type": "number"
+          },
+          "pageSize": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "totalPages": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total",
+          "totalPages"
+        ]
+      },
+      "PublicArticleDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "nullable": true
+          },
+          "publishedAt": {
+            "type": "string"
+          },
+          "readingTime": {
+            "type": "number"
+          },
+          "isPinned": {
+            "type": "boolean"
+          },
+          "isFeatured": {
+            "type": "boolean"
+          },
+          "author": {
+            "type": "object"
+          },
+          "category": {
+            "type": "object",
+            "nullable": true
+          },
+          "cover": {
+            "type": "object",
+            "nullable": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "content": {
+            "type": "string"
+          },
+          "contentHtml": {
+            "type": "string",
+            "nullable": true
+          },
+          "allowComment": {
+            "type": "boolean"
+          },
+          "canonicalUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "seoTitle": {
+            "type": "string",
+            "nullable": true
+          },
+          "seoDescription": {
+            "type": "string",
+            "nullable": true
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "wordCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "slug",
+          "summary",
+          "publishedAt",
+          "readingTime",
+          "isPinned",
+          "isFeatured",
+          "author",
+          "category",
+          "cover",
+          "tags",
+          "content",
+          "contentHtml",
+          "allowComment",
+          "canonicalUrl",
+          "seoTitle",
+          "seoDescription",
+          "updatedAt",
+          "wordCount"
+        ]
+      },
       "BasicSettingsDto": {
         "type": "object",
         "properties": {
@@ -3328,6 +4048,124 @@
           "basic",
           "content",
           "seo"
+        ]
+      },
+      "MediaUploadUrlResponseDto": {
+        "type": "object",
+        "properties": {
+          "uploadUrl": {
+            "type": "string"
+          },
+          "key": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "expiresInSeconds": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "uploadUrl",
+          "key",
+          "contentType",
+          "expiresInSeconds"
+        ]
+      },
+      "MediaResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "filename": {
+            "type": "string"
+          },
+          "originalName": {
+            "type": "string"
+          },
+          "mediaType": {
+            "type": "string",
+            "enum": [
+              "AUDIO",
+              "DOCUMENT",
+              "IMAGE",
+              "OTHER",
+              "VIDEO"
+            ]
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "size": {
+            "type": "string"
+          },
+          "bucket": {
+            "type": "string"
+          },
+          "objectKey": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "filename",
+          "originalName",
+          "mediaType",
+          "mimeType",
+          "size",
+          "bucket",
+          "objectKey",
+          "url",
+          "createdAt"
+        ]
+      },
+      "MediaListResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MediaResponseDto"
+            }
+          },
+          "page": {
+            "type": "number"
+          },
+          "pageSize": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "totalPages": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total",
+          "totalPages"
+        ]
+      },
+      "MediaDownloadUrlResponseDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
         ]
       },
       "HealthResponseDto": {
@@ -3652,6 +4490,34 @@
             "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
           }
         }
+      },
+      "PublicTaxonomyItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "articleCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "description",
+          "articleCount"
+        ]
       }
     }
   }

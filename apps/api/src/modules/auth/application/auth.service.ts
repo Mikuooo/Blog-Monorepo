@@ -2,13 +2,14 @@ import { createHash, randomBytes } from 'node:crypto'
 
 import { Inject, Injectable } from '@nestjs/common'
 
-import { verifyPassword } from '@blog/shared/password'
+import { hashPassword, verifyPassword } from '@blog/shared/password'
 
 import {
   AUTH_REPOSITORY,
   type AuthenticatedSession,
   type AuthenticatedUser,
   type AuthRepository,
+  type SessionSummary,
 } from './auth.contract.js'
 import { AuthError } from './auth.errors.js'
 
@@ -79,6 +80,10 @@ export class AuthService {
   async logout(sessionId: string, now = new Date()): Promise<void> {
     await this.repository.revokeSession(sessionId, now)
   }
+  listSessions(userId: string, now = new Date()): Promise<SessionSummary[]> { return this.repository.listSessions(userId, now) }
+  revokeOtherSessions(userId: string, currentSessionId: string, now = new Date()): Promise<void> { return this.repository.revokeOtherSessions(userId, currentSessionId, now) }
+  updateProfile(userId: string, displayName: string) { return this.repository.updateProfile(userId, displayName.trim()) }
+  async updatePassword(userId: string, currentSessionId: string, currentPassword: string, nextPassword: string, now = new Date()): Promise<void> { const user = await this.repository.findUserForLogin(userId); if (!user || !await verifyPassword(currentPassword, user.passwordHash)) throw new AuthError('INVALID_CREDENTIALS'); await this.repository.updatePassword(userId, await hashPassword(nextPassword), currentSessionId, now) }
 }
 
 export function sessionTtlSeconds(): number {

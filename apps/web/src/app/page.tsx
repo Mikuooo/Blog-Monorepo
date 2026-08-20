@@ -1,21 +1,34 @@
-import { Button } from '@blog/ui'
+import Link from 'next/link'
+import { listPublicArticles } from '../lib/public-api'
 
-export default function HomePage() {
+export default async function HomePage() {
+  const articles = await listPublicArticles()
   return (
-    <main className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-6 py-20">
-      <p className="mb-4 text-sm font-semibold uppercase tracking-[0.2em] text-sky-700">
-        Public Blog
-      </p>
-      <h1 className="max-w-3xl text-5xl font-semibold tracking-tight text-slate-950 sm:text-7xl">
-        A clean foundation for stories worth publishing.
-      </h1>
-      <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-600">
-        Server-rendered by Next.js and backed by the canonical NestJS API. Article routes will land
-        as the first vertical feature slice.
-      </p>
-      <div className="mt-10">
-        <Button aria-label="Project initialized">Project initialized</Button>
-      </div>
+    <main>
+      <header className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+          <Link className="text-xl font-bold" href="/">Blog Platform</Link>
+          <span className="text-sm text-slate-500">{articles.total} 篇文章</span>
+        </div>
+      </header>
+      <section className="mx-auto max-w-6xl px-6 py-12">
+        <h1 className="text-4xl font-bold">最新文章</h1>
+        <div className="mt-8 divide-y divide-slate-200 border-y border-slate-200">
+          {articles.items.map((article) => (
+            <article className="grid gap-3 py-7 md:grid-cols-[1fr_auto]" key={article.id}>
+              <div>
+                <Link className="text-2xl font-semibold hover:text-teal-700" href={`/articles/${article.slug}`}>{article.title}</Link>
+                {article.summary ? <p className="mt-2 max-w-3xl leading-7 text-slate-600">{article.summary}</p> : null}
+              </div>
+              <div className="text-sm text-slate-500 md:text-right">
+                <time dateTime={article.publishedAt}>{new Date(article.publishedAt).toLocaleDateString('zh-CN')}</time>
+                <p>{article.readingTime} 分钟阅读</p>
+              </div>
+            </article>
+          ))}
+          {articles.items.length === 0 ? <p className="py-16 text-center text-slate-500">暂无已发布文章</p> : null}
+        </div>
+      </section>
     </main>
   )
 }

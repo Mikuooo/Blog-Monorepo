@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Inject, Post, Req, Res, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpCode, Inject, Patch, Post, Req, Res, UseGuards } from '@nestjs/common'
 import {
   ApiCookieAuth,
   ApiBody,
@@ -22,6 +22,9 @@ import {
 } from '../dto/auth.dto.js'
 import { SessionAuthGuard } from '../guards/session-auth.guard.js'
 import { TrustedOriginGuard } from '../guards/trusted-origin.guard.js'
+import { IsString, MaxLength, MinLength } from 'class-validator'
+class UpdateProfileDto { @IsString() @MinLength(1) @MaxLength(120) displayName!: string }
+class UpdatePasswordDto { @IsString() @MinLength(1) @MaxLength(128) currentPassword!: string; @IsString() @MinLength(12) @MaxLength(128) newPassword!: string }
 
 type HeaderResponse = { setHeader(name: string, value: string): void }
 
@@ -95,4 +98,8 @@ export class AuthController {
     }
     return request.auth.user
   }
+  @Get('sessions') @ApiCookieAuth('session') @UseGuards(SessionAuthGuard) @ApiOperation({ operationId: 'listSessions' }) listSessions(@Req() request: AuthenticatedRequest) { return this.authService.listSessions(request.auth!.user.id) }
+  @Delete('sessions/others') @ApiCookieAuth('session') @UseGuards(TrustedOriginGuard, SessionAuthGuard) @ApiOperation({ operationId: 'revokeOtherSessions' }) async revokeOtherSessions(@Req() request: AuthenticatedRequest) { await this.authService.revokeOtherSessions(request.auth!.user.id, request.auth!.id); return { success: true as const } }
+  @Patch('me') @ApiCookieAuth('session') @UseGuards(TrustedOriginGuard, SessionAuthGuard) @ApiOperation({ operationId: 'updateCurrentUser' }) updateProfile(@Body() body: UpdateProfileDto, @Req() request: AuthenticatedRequest) { return this.authService.updateProfile(request.auth!.user.id, body.displayName) }
+  @Post('change-password') @HttpCode(200) @ApiCookieAuth('session') @UseGuards(TrustedOriginGuard, SessionAuthGuard) @ApiOperation({ operationId: 'changePassword' }) async changePassword(@Body() body: UpdatePasswordDto, @Req() request: AuthenticatedRequest) { await this.authService.updatePassword(request.auth!.user.id, request.auth!.id, body.currentPassword, body.newPassword); return { success: true as const } }
 }

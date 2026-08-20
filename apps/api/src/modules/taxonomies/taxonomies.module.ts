@@ -6,10 +6,11 @@ import { TAXONOMY_REPOSITORY } from './application/taxonomy.contract.js'
 import { TaxonomyService } from './application/taxonomy.service.js'
 import { AdminCategoriesController } from './controllers/admin-categories.controller.js'
 import { AdminTagsController } from './controllers/admin-tags.controller.js'
+import { PublicTaxonomiesController } from './controllers/public-taxonomies.controller.js'
 import { PrismaTaxonomyRepository } from './infrastructure/persistence/prisma-taxonomy.repository.js'
 
 @Module({
-  controllers: [AdminCategoriesController, AdminTagsController],
+  controllers: [AdminCategoriesController, AdminTagsController, PublicTaxonomiesController],
   imports: [AuthModule, PrismaInfrastructureModule],
   providers: [
     TaxonomyService,

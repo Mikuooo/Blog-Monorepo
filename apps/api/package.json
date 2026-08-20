@@ -17,6 +17,8 @@
     "openapi:generate": "node --import tsx --conditions=development src/openapi.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1113.0",
+    "@aws-sdk/s3-request-presigner": "^3.1113.0",
     "@blog/config": "workspace:*",
     "@blog/database": "workspace:*",
     "@blog/event-contracts": "workspace:*",

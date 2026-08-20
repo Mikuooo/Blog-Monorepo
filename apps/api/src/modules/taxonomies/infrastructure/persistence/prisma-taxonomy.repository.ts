@@ -8,6 +8,7 @@ import type {
   CreateCategoryCommand,
   CreateTagCommand,
   TagListItem,
+  PublicTaxonomyItem,
   TaxonomyDeleteResult,
   TaxonomyListQuery,
   TaxonomyListResult,
@@ -70,6 +71,24 @@ export class PrismaTaxonomyRepository implements TaxonomyRepository {
       this.prisma.client.tag.count({ where }),
     ])
     return pageResult(items.map(mapTag), query, total)
+  }
+
+  async listPublicCategories(): Promise<PublicTaxonomyItem[]> {
+    const items = await this.prisma.client.category.findMany({
+      orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+      select: { _count: { select: { articles: { where: publicArticleWhere } } }, description: true, id: true, name: true, slug: true },
+      where: { articles: { some: publicArticleWhere }, deletedAt: null },
+    })
+    return items.map(({ _count, ...item }) => ({ ...item, articleCount: _count.articles }))
+  }
+
+  async listPublicTags(): Promise<PublicTaxonomyItem[]> {
+    const items = await this.prisma.client.tag.findMany({
+      orderBy: [{ name: 'asc' }],
+      select: { _count: { select: { articles: { where: { article: publicArticleWhere } } } }, description: true, id: true, name: true, slug: true },
+      where: { articles: { some: { article: publicArticleWhere } } },
+    })
+    return items.map(({ _count, ...item }) => ({ ...item, articleCount: _count.articles }))
   }
 
   async createCategory(command: CreateCategoryCommand): Promise<CategoryListItem> {
@@ -211,6 +230,8 @@ export class PrismaTaxonomyRepository implements TaxonomyRepository {
     })
   }
 }
+
+const publicArticleWhere = { deletedAt: null, publishedAt: { lte: new Date() }, status: 'PUBLISHED' as const, visibility: 'PUBLIC' as const }
 
 const categorySelect = {
   _count: {

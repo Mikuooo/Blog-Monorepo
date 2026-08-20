@@ -1,0 +1,16 @@
+import { Body, Controller, Delete, Get, HttpCode, Inject, Param, Patch, Query, UseGuards, ValidationPipe } from '@nestjs/common'
+import { ApiCookieAuth, ApiNoContentResponse, ApiOperation, ApiProperty, ApiPropertyOptional, ApiTags } from '@nestjs/swagger'
+import { IsIn, IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator'
+import { Type } from 'class-transformer'
+import type { CommentStatus } from './comments.service.js'
+import { CommentsService } from './comments.service.js'
+import { RequirePermissions } from '../auth/decorators/require-permissions.js'
+import { PermissionGuard } from '../auth/guards/permission.guard.js'
+import { SessionAuthGuard } from '../auth/guards/session-auth.guard.js'
+import { TrustedOriginGuard } from '../auth/guards/trusted-origin.guard.js'
+class CommentQueryDto { @ApiPropertyOptional({ format: 'uuid' }) @IsOptional() @IsUUID() articleId?: string; @ApiPropertyOptional({ enum: ['PENDING','APPROVED','REJECTED','SPAM'] }) @IsOptional() @IsIn(['PENDING','APPROVED','REJECTED','SPAM']) status?: CommentStatus; @ApiPropertyOptional({ default: 1 }) @Type(() => Number) @IsInt() @Min(1) page = 1; @ApiPropertyOptional({ default: 20, maximum: 100 }) @Type(() => Number) @IsInt() @Min(1) @Max(100) pageSize = 20 }
+class CommentArticleParamsDto { @ApiProperty({ format: 'uuid' }) @IsUUID() articleId!: string }
+class CommentParamsDto { @ApiProperty({ format: 'uuid' }) @IsUUID() commentId!: string }
+class CommentStatusDto { @ApiProperty({ enum: ['PENDING','APPROVED','REJECTED','SPAM'] }) @IsIn(['PENDING','APPROVED','REJECTED','SPAM']) status!: CommentStatus }
+@ApiTags('comments') @Controller({ path: 'public/articles', version: '1' }) export class PublicCommentsController { constructor(@Inject(CommentsService) private readonly service: CommentsService) {} @Get(':articleId/comments') @ApiOperation({ operationId: 'listPublicComments' }) list(@Param(new ValidationPipe({ transform: true })) p: CommentArticleParamsDto, @Query(new ValidationPipe({ transform: true, whitelist: true })) q: CommentQueryDto) { return this.service.listPublic(p.articleId, q.page, q.pageSize) } }
+@ApiTags('admin-comments') @ApiCookieAuth('session') @RequirePermissions('comment.read') @UseGuards(SessionAuthGuard, TrustedOriginGuard, PermissionGuard) @Controller({ path: 'admin/comments', version: '1' }) export class AdminCommentsController { constructor(@Inject(CommentsService) private readonly service: CommentsService) {} @Get() @RequirePermissions('comment.read') @ApiOperation({ operationId: 'listAdminComments' }) list(@Query(new ValidationPipe({ transform: true, whitelist: true })) q: CommentQueryDto) { return this.service.list(q) } @Patch(':commentId/status') @RequirePermissions('comment.moderate') @ApiOperation({ operationId: 'updateAdminCommentStatus' }) update(@Param(new ValidationPipe({ transform: true })) p: CommentParamsDto, @Body(new ValidationPipe({ transform: true, whitelist: true })) body: CommentStatusDto) { return this.service.updateStatus(p.commentId, body.status) } @Delete(':commentId') @HttpCode(204) @RequirePermissions('comment.delete') @ApiNoContentResponse() delete(@Param(new ValidationPipe({ transform: true })) p: CommentParamsDto) { return this.service.delete(p.commentId) } }

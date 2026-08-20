@@ -133,6 +133,8 @@ function SidebarContent({
       '/tags',
       '/users',
       '/settings',
+      '/media',
+      '/comments',
     ].includes(item.href)
 
     return unavailable ? (

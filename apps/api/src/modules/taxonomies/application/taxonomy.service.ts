@@ -11,6 +11,7 @@ import {
   type TaxonomyListQuery,
   type TaxonomyListResult,
   type TaxonomyRepository,
+  type PublicTaxonomyItem,
   type UpdateCategoryCommand,
   type UpdateTagCommand,
 } from './taxonomy.contract.js'
@@ -48,6 +49,9 @@ export class TaxonomyService {
   listTags(query: TaxonomyListQuery): Promise<TaxonomyListResult<TagListItem>> {
     return this.repository.listTags(query)
   }
+
+  listPublicCategories(): Promise<PublicTaxonomyItem[]> { return this.repository.listPublicCategories() }
+  listPublicTags(): Promise<PublicTaxonomyItem[]> { return this.repository.listPublicTags() }
 
   updateCategory(command: UpdateCategoryCommand): Promise<CategoryListItem> {
     return this.repository.updateCategory(command)
