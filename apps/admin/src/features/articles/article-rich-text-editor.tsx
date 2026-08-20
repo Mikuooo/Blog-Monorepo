@@ -51,7 +51,7 @@ export function ArticleRichTextEditor({
           automatic_uploads: false,
           content_css: false,
           content_style:
-            'body{font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:1.75;padding:16px 22px;color:#172421} img{max-width:100%;height:auto} table{border-collapse:collapse;width:100%} td,th{border:1px solid #d7e4e1;padding:8px}',
+            'html,body{background:transparent} body{font-family:Inter,system-ui,sans-serif;font-size:16px;line-height:1.75;padding:16px 22px;color:#172421} img{max-width:100%;height:auto} table{border-collapse:collapse;width:100%} td,th{border:1px solid #d7e4e1;padding:8px}',
           height: 620,
           image_caption: true,
           menubar: false,

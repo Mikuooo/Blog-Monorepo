@@ -117,7 +117,7 @@ export function ArticleForm() {
       <div className="grid items-start gap-5 xl:h-[calc(100dvh-15rem)] xl:min-h-0 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-stretch 2xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="min-w-0 space-y-5 xl:h-full xl:overflow-y-auto xl:overscroll-contain xl:pr-2">
           <Card>
-            <CardContent className="space-y-5 p-4 sm:p-6">
+            <CardContent className="space-y-4 p-4 pt-4 sm:p-5 sm:pt-5">
               <div className="grid gap-4 lg:grid-cols-[3fr_1fr_1fr]">
                 <Field
                   error={form.formState.errors.title?.message}
@@ -232,25 +232,19 @@ export function ArticleForm() {
         </div>
 
         <aside className="space-y-5 xl:h-full xl:overflow-y-auto xl:overscroll-contain xl:pl-1 xl:pr-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>发布操作</CardTitle>
-              <CardDescription>保存为草稿，或创建后立即发布。</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <Button disabled={mutation.isPending} type="submit" variant="outline">
-                {mutation.isPending && submitIntent === 'draft' ? '正在保存…' : '保存草稿'}
-              </Button>
-              <Button
-                disabled={mutation.isPending || !canPublish}
-                onClick={form.handleSubmit((values) => mutation.mutate({ intent: 'publish', values }))}
-                title={canPublish ? '创建文章并立即发布' : '当前账号缺少 article.publish 权限'}
-                type="button"
-              >
-                {mutation.isPending && submitIntent === 'publish' ? '正在发布…' : '发布'}
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+            <Button disabled={mutation.isPending} type="submit" variant="outline">
+              {mutation.isPending && submitIntent === 'draft' ? '正在保存…' : '保存草稿'}
+            </Button>
+            <Button
+              disabled={mutation.isPending || !canPublish}
+              onClick={form.handleSubmit((values) => mutation.mutate({ intent: 'publish', values }))}
+              title={canPublish ? '创建文章并立即发布' : '当前账号缺少 article.publish 权限'}
+              type="button"
+            >
+              {mutation.isPending && submitIntent === 'publish' ? '正在发布…' : '发布'}
+            </Button>
+          </div>
 
           <Card>
             <CardHeader>
