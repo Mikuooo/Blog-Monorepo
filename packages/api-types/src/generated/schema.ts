@@ -52,7 +52,7 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        patch: operations["updateCurrentUser"];
         trace?: never;
     };
     "/api/v1/auth/sessions": {
@@ -82,6 +82,22 @@ export interface paths {
         put?: never;
         post?: never;
         delete: operations["revokeOtherSessions"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/change-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["changePassword"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1356,6 +1372,23 @@ export interface operations {
             };
         };
     };
+    updateCurrentUser: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     listSessions: {
         parameters: {
             query?: never;
@@ -1374,6 +1407,23 @@ export interface operations {
         };
     };
     revokeOtherSessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    changePassword: {
         parameters: {
             query?: never;
             header?: never;
@@ -1843,7 +1893,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                articleId: string;
+            };
             cookie?: never;
         };
         requestBody?: never;

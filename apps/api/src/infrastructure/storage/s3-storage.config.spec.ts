@@ -29,6 +29,16 @@ describe('loadS3StorageConfig', () => {
     expect(() => loadS3StorageConfig({})).toThrow('S3_BUCKET')
   })
 
+  it('uses path-style requests for Qiniu S3 endpoints', () => {
+    expect(
+      loadS3StorageConfig({
+        S3_BUCKET: 'media',
+        S3_ENDPOINT: 'https://s3.cn-east-1.qiniucs.com',
+        S3_FORCE_PATH_STYLE: 'false',
+      }),
+    ).toMatchObject({ forcePathStyle: true })
+  })
+
   it('rejects invalid URL and TTL settings', () => {
     expect(() => loadS3StorageConfig({ S3_BUCKET: 'media', S3_ENDPOINT: 'ftp://s3.test' })).toThrow(
       'S3_ENDPOINT',

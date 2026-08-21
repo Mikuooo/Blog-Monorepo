@@ -2,9 +2,10 @@ import type { components } from '@blog/api-types'
 import { z } from 'zod'
 
 export type CreateArticleRequest = components['schemas']['CreateAdminArticleDto']
+export type UpdateArticleRequest = components['schemas']['UpdateAdminArticleDto']
 
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u
-const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu
 
 const optionalUuid = z
   .string()
@@ -22,6 +23,7 @@ export const articleFormSchema = z
     categoryId: optionalUuid,
     content: z.string().trim().min(1, '请输入文章正文'),
     coverId: optionalUuid,
+    hasExistingPassword: z.boolean(),
     isFeatured: z.boolean(),
     isPinned: z.boolean(),
     password: z.string().max(128, '访问密码不能超过 128 个字符'),
@@ -39,7 +41,11 @@ export const articleFormSchema = z
     visibility: z.enum(['PUBLIC', 'PRIVATE', 'PASSWORD']),
   })
   .superRefine((values, context) => {
-    if (values.visibility === 'PASSWORD' && values.password.length < 8) {
+    if (
+      values.visibility === 'PASSWORD' &&
+      !values.hasExistingPassword &&
+      values.password.length < 8
+    ) {
       context.addIssue({
         code: 'custom',
         message: '密码可见文章需要至少 8 位访问密码',
@@ -56,6 +62,7 @@ export const articleFormDefaults: ArticleFormValues = {
   categoryId: '',
   content: '',
   coverId: '',
+  hasExistingPassword: false,
   isFeatured: false,
   isPinned: false,
   password: '',
@@ -66,6 +73,19 @@ export const articleFormDefaults: ArticleFormValues = {
   tagIds: [],
   title: '',
   visibility: 'PUBLIC',
+}
+
+export function toUpdateArticleRequest(
+  values: ArticleFormValues,
+  expectedVersion: number,
+): UpdateArticleRequest {
+  return {
+    ...toCreateArticleRequest(values),
+    expectedVersion,
+    ...(values.visibility !== 'PASSWORD' && values.hasExistingPassword
+      ? { clearPassword: true }
+      : {}),
+  }
 }
 
 export function toCreateArticleRequest(values: ArticleFormValues): CreateArticleRequest {

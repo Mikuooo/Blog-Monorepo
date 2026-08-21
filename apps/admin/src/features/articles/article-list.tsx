@@ -56,6 +56,7 @@ export function ArticleList({ params }: { params: ArticleListParams }) {
   }
   const articles = useArticleList(query)
   const canCreate = currentUser.data?.permissions.includes('article.create') ?? false
+  const canPublish = currentUser.data?.permissions.includes('article.publish') ?? false
 
   function goToPage(nextPage: number) {
     const search = new URLSearchParams()
@@ -187,15 +188,23 @@ export function ArticleList({ params }: { params: ArticleListParams }) {
                         {formatDateTime(article.updatedAt)}
                       </TableCell>
                       <TableCell>
-                        <Button
+                        <Link
                           aria-label={`管理《${article.title}》`}
-                          disabled
-                          size="icon"
-                          title="文章编辑功能即将开放"
-                          variant="ghost"
+                          className="inline-flex size-9 items-center justify-center rounded-md hover:bg-muted"
+                          href={`/articles/${article.id}`}
+                          title="编辑文章"
                         >
                           <Icon className="size-5" name="more" />
-                        </Button>
+                        </Link>
+                        {article.status === 'DRAFT' && canPublish ? (
+                          <Link
+                            className="ml-1 inline-flex h-9 items-center justify-center rounded-md px-2 text-xs font-semibold text-primary hover:bg-primary-soft"
+                            href={`/articles/${article.id}`}
+                            title="编辑并发布文章"
+                          >
+                            发布
+                          </Link>
+                        ) : null}
                       </TableCell>
                     </TableRow>
                   )

@@ -143,6 +143,7 @@ export class AdminArticlesController {
   @Get(':articleId')
   @ApiOperation({ operationId: 'getAdminArticle', summary: 'Get an administration article' })
   @ApiOkResponse({ type: AdminArticleDetailDto })
+  @ApiParam({ format: 'uuid', name: 'articleId', type: String })
   @ApiBadRequestResponse({ type: AdminArticleErrorResponseDto })
   @ApiUnauthorizedResponse({ type: AdminArticleErrorResponseDto })
   @ApiForbiddenResponse({ type: AdminArticleErrorResponseDto })

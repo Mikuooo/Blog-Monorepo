@@ -27,4 +27,9 @@ describe('MediaService', () => {
   it('rejects keys outside the authenticated actor prefix', async () => {
     await expect(new MediaService(repository, storage).complete({ actorId: 'actor', key: 'media/other/key', originalName: 'cover.png' })).rejects.toEqual(expect.objectContaining<Partial<MediaError>>({ code: 'MEDIA_KEY_INVALID' }))
   })
+  it('maps storage metadata failures to a media error instead of leaking a 500', async () => {
+    const key = 'media/actor/2026-08-19/00000000-0000-0000-0000-000000000000'
+    vi.mocked(storage.getObjectMetadata).mockRejectedValue(new Error('HeadObject failed'))
+    await expect(new MediaService(repository, storage).complete({ actorId: 'actor', key, originalName: 'cover.png' })).rejects.toEqual(expect.objectContaining<Partial<MediaError>>({ code: 'MEDIA_OBJECT_UNAVAILABLE' }))
+  })
 })

@@ -12,7 +12,7 @@ import { Controller, useForm, useWatch } from 'react-hook-form'
 
 import { useCurrentUser } from '@/features/auth/auth-query'
 
-import { ArticleApiError, createArticle, publishArticle } from './article-api'
+import { ArticleApiError, createArticle, publishArticle, updateArticle } from './article-api'
 import { ArticleCoverField } from './article-cover-field'
 import { articleKeys } from './article-query'
 import { ArticleRichTextEditor } from './article-rich-text-editor'
@@ -20,6 +20,7 @@ import {
   articleFormDefaults,
   articleFormSchema,
   slugifyTitle,
+  toUpdateArticleRequest,
   toCreateArticleRequest,
   type ArticleFormValues,
 } from './article-schema'
@@ -40,14 +41,17 @@ class ArticlePublishAfterCreateError extends Error {
   }
 }
 
-export function ArticleForm() {
+export function ArticleForm({ articleId, initialValues, expectedVersion }: { articleId?: string; initialValues?: ArticleFormValues; expectedVersion?: number } = {}) {
   const currentUser = useCurrentUser()
   const queryClient = useQueryClient()
   const router = useRouter()
   const form = useForm<ArticleFormValues>({
-    defaultValues: articleFormDefaults,
+    defaultValues: initialValues ?? articleFormDefaults,
     resolver: zodResolver(articleFormSchema),
   })
+  useEffect(() => {
+    if (initialValues) form.reset(initialValues)
+  }, [form, initialValues])
   const visibility = useWatch({ control: form.control, name: 'visibility' })
   const options = useWatch({
     control: form.control,
@@ -55,6 +59,17 @@ export function ArticleForm() {
   })
   const mutation = useMutation({
     mutationFn: async ({ intent, values }: { intent: SubmitIntent; values: ArticleFormValues }) => {
+      if (articleId && expectedVersion !== undefined) {
+        const updated = await updateArticle(articleId, toUpdateArticleRequest(values, expectedVersion))
+        if (intent === 'draft') return { intent, result: updated }
+
+        try {
+          const result = await publishArticle(articleId, updated.version)
+          return { intent, result }
+        } catch (error) {
+          throw new ArticlePublishAfterCreateError(articleId, { cause: error })
+        }
+      }
       const draft = await createArticle(toCreateArticleRequest(values))
       if (intent === 'draft') return { intent, result: draft }
 
@@ -77,6 +92,7 @@ export function ArticleForm() {
     },
   })
   const canCreate = currentUser.data?.permissions.includes('article.create') ?? false
+  const canEdit = currentUser.data?.permissions.includes('article.update') ?? false
   const canPublish = currentUser.data?.permissions.includes('article.publish') ?? false
   const submitIntent = mutation.variables?.intent
 
@@ -87,14 +103,14 @@ export function ArticleForm() {
     return () => window.removeEventListener('beforeunload', warn)
   }, [form.formState.isDirty, mutation.isSuccess])
 
-  if (!canCreate) {
+  if (articleId ? !canEdit : !canCreate) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>没有新建文章权限</CardTitle>
+          <CardTitle>{articleId ? '没有编辑文章权限' : '没有新建文章权限'}</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
-          当前账号缺少 article.create 权限。
+          当前账号缺少 {articleId ? 'article.update' : 'article.create'} 权限。
         </CardContent>
       </Card>
     )
@@ -114,8 +130,8 @@ export function ArticleForm() {
         </p>
       ) : null}
 
-      <div className="grid items-start gap-5 xl:h-[calc(100dvh-15rem)] xl:min-h-0 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-stretch 2xl:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="min-w-0 space-y-5 xl:h-full xl:overflow-y-auto xl:overscroll-contain xl:pr-2">
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_360px] 2xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="min-w-0 space-y-5 xl:pr-2">
           <Card>
             <CardContent className="space-y-4 p-4 pt-4 sm:p-5 sm:pt-5">
               <div className="grid gap-4 lg:grid-cols-[3fr_1fr_1fr]">
@@ -231,7 +247,7 @@ export function ArticleForm() {
           </section>
         </div>
 
-        <aside className="space-y-5 xl:h-full xl:overflow-y-auto xl:overscroll-contain xl:pl-1 xl:pr-2">
+        <aside className="space-y-5 xl:sticky xl:top-20 xl:pl-1 xl:pr-2">
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
             <Button disabled={mutation.isPending} type="submit" variant="outline">
               {mutation.isPending && submitIntent === 'draft' ? '正在保存…' : '保存草稿'}
@@ -400,7 +416,7 @@ export function articleErrorMessage(error: unknown): string {
   if (error.code === 'ARTICLE_COVER_NOT_FOUND') return '选择的封面不存在或不可用。'
   if (error.code === 'ARTICLE_TAG_NOT_FOUND') return '一个或多个标签不存在或已被删除。'
   if (error.status === 401) return '登录状态已失效，请重新登录。'
-  if (error.status === 403) return '当前账号没有新建文章权限。'
+  if (error.status === 403) return '当前账号没有执行此文章操作的权限。'
   if (error.code === 'NETWORK_ERROR') return '无法连接后台 API，请确认服务已启动。'
   return '文章保存失败，请检查填写内容后重试。'
 }

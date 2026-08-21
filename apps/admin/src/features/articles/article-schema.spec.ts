@@ -58,6 +58,17 @@ describe('article form schema', () => {
     expect(result.success).toBe(false)
   })
 
+  it('accepts UUIDv7 category ids returned by the database', () => {
+    const result = articleFormSchema.safeParse({
+      ...articleFormDefaults,
+      categoryId: '0192c2a5-7b6d-7abc-8def-0123456789ab',
+      content: '正文',
+      slug: 'uuidv7-category',
+      title: 'UUIDv7 分类',
+    })
+    expect(result.success).toBe(true)
+  })
+
   it('generates safe slugs for Latin titles without guessing Chinese transliteration', () => {
     expect(slugifyTitle('  Hello, Delivery Loop!  ')).toBe('hello-delivery-loop')
     expect(slugifyTitle('中文标题')).toBe('')

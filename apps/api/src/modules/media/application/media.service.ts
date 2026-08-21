@@ -29,7 +29,12 @@ export class MediaService {
   async complete(input: MediaCompleteInput) {
     const keyPattern = new RegExp(`^media/${input.actorId}/\\d{4}-\\d{2}-\\d{2}/[0-9a-f-]{36}$`)
     if (!keyPattern.test(input.key)) throw new MediaError('MEDIA_KEY_INVALID')
-    const metadata = await this.storage.getObjectMetadata(input.key)
+    let metadata: Awaited<ReturnType<StorageProvider['getObjectMetadata']>>
+    try {
+      metadata = await this.storage.getObjectMetadata(input.key)
+    } catch (error) {
+      throw new MediaError('MEDIA_OBJECT_UNAVAILABLE', error instanceof Error ? { cause: error } : undefined)
+    }
     if (!metadata.contentType || !validContentType(metadata.contentType)) throw new MediaError('MEDIA_TYPE_INVALID')
     if (metadata.size <= 0) throw new MediaError('MEDIA_SIZE_INVALID')
     if (metadata.size > maxUploadBytes()) throw new MediaError('MEDIA_UPLOAD_TOO_LARGE')

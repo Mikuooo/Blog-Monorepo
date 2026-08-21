@@ -42,7 +42,7 @@ export class CreateAdminArticleDto {
 
   @ApiPropertyOptional({ format: 'uuid', nullable: true, type: String })
   @IsOptional()
-  @IsUUID()
+  @IsUUID('all')
   categoryId?: string | null
 
   @ApiProperty({ type: String })
@@ -52,7 +52,7 @@ export class CreateAdminArticleDto {
 
   @ApiPropertyOptional({ format: 'uuid', nullable: true, type: String })
   @IsOptional()
-  @IsUUID()
+  @IsUUID('all')
   coverId?: string | null
 
   @ApiPropertyOptional({ default: false, type: Boolean })
@@ -102,7 +102,7 @@ export class CreateAdminArticleDto {
   @IsArray()
   @ArrayMaxSize(50)
   @ArrayUnique()
-  @IsUUID(undefined, { each: true })
+  @IsUUID('all', { each: true })
   tagIds?: string[]
 
   @ApiProperty({ maxLength: 240, type: String })
@@ -131,7 +131,7 @@ export class UpdateAdminArticleDto {
 
   @ApiPropertyOptional({ format: 'uuid', nullable: true, type: String })
   @IsOptional()
-  @IsUUID()
+  @IsUUID('all')
   categoryId?: string | null
 
   @ApiPropertyOptional({ type: Boolean })
@@ -147,7 +147,7 @@ export class UpdateAdminArticleDto {
 
   @ApiPropertyOptional({ format: 'uuid', nullable: true, type: String })
   @IsOptional()
-  @IsUUID()
+  @IsUUID('all')
   coverId?: string | null
 
   @ApiProperty({ minimum: 1, type: Number })
@@ -204,7 +204,7 @@ export class UpdateAdminArticleDto {
   @IsArray()
   @ArrayMaxSize(50)
   @ArrayUnique()
-  @IsUUID(undefined, { each: true })
+  @IsUUID('all', { each: true })
   tagIds?: string[]
 
   @ApiPropertyOptional({ maxLength: 240, type: String })

@@ -980,7 +980,17 @@
     "/api/v1/admin/articles/{articleId}": {
       "get": {
         "operationId": "getAdminArticle",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "articleId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",

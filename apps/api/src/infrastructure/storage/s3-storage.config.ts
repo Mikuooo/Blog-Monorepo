@@ -43,6 +43,10 @@ function optionalUrl(name: string, value: string | undefined): string | undefine
   return parsed.toString().replace(/\/$/, '')
 }
 
+function requiresPathStyle(endpoint: string | undefined): boolean {
+  return endpoint?.toLowerCase().includes('.qiniucs.com') ?? false
+}
+
 export function loadS3StorageConfig(
   environment: Readonly<Record<string, string | undefined>> = process.env,
 ): S3StorageConfig {
@@ -51,7 +55,9 @@ export function loadS3StorageConfig(
     'S3_PUBLIC_BASE_URL',
     optionalEnvironmentVariable('S3_PUBLIC_BASE_URL', environment),
   )
-  const forcePathStyle = (optionalEnvironmentVariable('S3_FORCE_PATH_STYLE', environment) ?? 'false') === 'true'
+  const forcePathStyle =
+    requiresPathStyle(endpoint) ||
+    (optionalEnvironmentVariable('S3_FORCE_PATH_STYLE', environment) ?? 'false') === 'true'
   const accessKeyId = optionalEnvironmentVariable('S3_ACCESS_KEY_ID', environment)
   const secretAccessKey = optionalEnvironmentVariable('S3_SECRET_ACCESS_KEY', environment)
   if ((accessKeyId && !secretAccessKey) || (!accessKeyId && secretAccessKey)) {
